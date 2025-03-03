@@ -6,6 +6,7 @@ import "../app/globals.css";
 import ExportedImage from "next-image-export-optimizer";
 import { useState } from "react";
 import Link from "next/dist/client/link";
+import Footer from "./Footer";
 const Content = () => {
   useEffect(() => {
     AOS.init({
@@ -32,7 +33,7 @@ const Content = () => {
   
 
   return (
-    <div className="flex flex-col items-center justify-center  min-h-screen">
+    <div className="flex flex-col items-center justify-center relative z-10 min-h-screen">
            <section className="flex items-center justify-center bg-white scroll-animate md:hidden">
         <div className="md:w-full w-full p-4 flex flex-col justify-center items-center text-center" data-aos="fade-up" data-aos-delay="200">
           <p className="text-2xl sm:text-3xl leading-relaxed  text-black mt-28">
@@ -322,6 +323,7 @@ const Content = () => {
     ))}
   </div>
 </section>
+<Footer/>
 
     </div>
   );

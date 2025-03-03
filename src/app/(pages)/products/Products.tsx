@@ -7,6 +7,7 @@ import gsap from "gsap";
 import Link from "next/link";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { v4 as uuidv4 } from "uuid";
+import Footer from "@/components/Footer";
 
 
 
@@ -167,29 +168,7 @@ const Products: React.FC = () => {
 
   
   
-  
-  useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
-
-    if (descriptionRef.current) {
-      gsap.fromTo(
-        descriptionRef.current,
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: descriptionRef.current,
-            start: "top 80%",
-          },
-        }
-      );
-    }
-
-   
-  }, []);
+ 
 
   const boxRef = useRef<HTMLDivElement>(null);
 
@@ -268,10 +247,9 @@ const Products: React.FC = () => {
   };
 
   return (
-    
-    <div className="w-full ">
+    <div className="w-full  lg:sticky top-20 max-h-screen relative z-10 overflow-auto">
       
-      <div className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 flex flex-col lg:flex-row gap-16 mt-4 ">
+      <div className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 flex flex-col lg:flex-row xl:mt-10 gap-16 mt-4 ">
       
         <div className="w-full lg:w-1/2  lg:sticky top-20 h-max" ref={leftBoxRef}>
           <div className="h-[500px]  relative">
@@ -303,7 +281,7 @@ const Products: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-full lg:w-1/2" ref={boxRef}>
+        <div className="w-full lg:w-1/2 xl:mt-12"  ref={boxRef}>
           <h1 className="text-3xl font-bold mb-4 font-serif">{selectedVariant.name}</h1>
           <p className="text-lg text-gray-500 mb-4 ">{selectedVariant.description}</p>
           <h2 className="text-3xl font-bold">
@@ -382,7 +360,7 @@ const Products: React.FC = () => {
 
     </div>
 
-    <div className="flex-col flex mt-5 gap-4" ref={descriptionRef}>
+    <div className="flex-col flex mt-5 gap-4" >
        
                 
                 
@@ -473,7 +451,7 @@ const Products: React.FC = () => {
     </div>
     
    
-    
+    <Footer/>
 
 
    </div>

@@ -1,18 +1,22 @@
+
 "use client";
 
 import React from "react";
 
 const Footer = () => {
   return (
-    <div className="relative min-h-screen flex flex-col">
+    <div className="relative min-h-screen flex flex-col " >
+    
       <main
-        className="h-[150vh] bg-cover bg-center relative z-1"
+        className="h-[150vh] bg-cover bg-center   relative z-1"
         style={{
           backgroundImage: "url('/assets/p4.png')",
+         
         }}
       ></main>
 
-      <footer className="w-full py-16 bg-white sticky right-0 left-0 bottom-0 z-[-1]">
+  
+      <footer className=" w-full py-16 bg-white sticky right-0 left-0 bottom-0  z-[-1]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             <div className="text-left">
