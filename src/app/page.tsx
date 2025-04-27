@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import Content from "@/components/Content";
 import Loader from "../components/Loader"; 
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Test from "../components/Test";
 
 
 export default function Home() {
