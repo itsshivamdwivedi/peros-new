@@ -110,7 +110,18 @@ const Checkout = () => {
   };
   
   
+  
+  useEffect(() => {
+    
+    document.documentElement.style.height = "auto";
+    document.body.style.height = "auto";
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  
 
+    document.body.style.overflow = "auto";
+  }, []);
+  
 
 
 
@@ -179,6 +190,7 @@ const Checkout = () => {
     return `ORD-${timestamp}-${randomStr}`;
   };
 
+  
   const storePaymentDetails = async (paymentDetails: PaymentDetails) => {
     if (
       !paymentDetails.orderId ||
@@ -191,38 +203,32 @@ const Checkout = () => {
       console.error("Incomplete payment details:", paymentDetails);
       return;
     }
-  
+
     try {
-      
       const userRef = doc(db, `users/${user.uid}`);
-  
-      // Log the data you're going to save for debugging purposes
       console.log("Saving payment details:", paymentDetails);
-  
-      // Store payment details directly in the user's document, appending to the `orders` array
+
       await setDoc(
         userRef,
         {
           orders: arrayUnion({
-            ...paymentDetails, // Save the entire payment details in the `orders` array
-            createdAt: Timestamp.now(), // Use Firestore Timestamp
+            ...paymentDetails,
+            createdAt: Timestamp.now(),
           }),
-          cart: [], // Optionally clear the cart after the order is completed
+          cart: [],
         },
-        { merge: true } // Use merge to prevent overwriting the entire document
+        { merge: true }
       );
-  
       console.log("Payment and cart details saved in the user's document");
-  
-      // Update the state with payment details
       setPaymentDetails(paymentDetails);
-  
-      // Show the success popup
       setShowPopup(true);
     } catch (error) {
       console.error("Error storing payment details: ", error);
     }
   };
+
+  
+  
   const handlePayment = async () => {
     if (cart.length === 0) {
       setShowCartEmptyError(true); // Show the cart empty error popup
@@ -335,11 +341,12 @@ const Checkout = () => {
       setIsProcessing(false);
     }
   };
+
   
   
   return (
    
-    <div className="">
+    <div className="xl:mt-[15vh]">
       
     
      

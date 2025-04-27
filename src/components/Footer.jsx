@@ -5,12 +5,13 @@ import React from "react";
 
 const Footer = () => {
   return (
-    <div className="relative min-h-screen flex flex-col " >
+    <div className="relative min-h-screen flex flex-col z-10" >
     
       <main
         className="h-[150vh] bg-cover bg-center   relative z-1"
         style={{
-          backgroundImage: "url('/assets/p4.png')",
+          backgroundImage: "url('/footer.jpg')",
+         height: "100vh",
          
         }}
       ></main>

@@ -33,7 +33,7 @@ const Content = () => {
   
 
   return (
-    <div className="flex flex-col items-center justify-center relative z-10 min-h-screen">
+    <div className="flex flex-col items-center justify-center relative z-10 min-h-screen  bg-white ">
            <section className="flex items-center justify-center bg-white scroll-animate md:hidden">
         <div className="md:w-full w-full p-4 flex flex-col justify-center items-center text-center" data-aos="fade-up" data-aos-delay="200">
           <p className="text-2xl sm:text-3xl leading-relaxed  text-black mt-28">

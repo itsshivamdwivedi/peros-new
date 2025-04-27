@@ -6,9 +6,14 @@ import Hom from "@/components/Hom";
 import Footer from "@/components/Footer";
 import Content from "@/components/Content";
 import Loader from "../components/Loader"; 
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Test from "../components/Test";
+
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
+ 
+  
 
  
   useEffect(() => {
@@ -19,6 +24,8 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
+  
+
   return (
     <main className="">
   
@@ -28,8 +35,9 @@ export default function Home() {
       {!isLoading && (
         <div>
           <Navbar />
-          <Hom />
-          <Content />
+          <Hom  />
+      <Content/>
+
           
         </div>
      )}

@@ -19,6 +19,18 @@ export default function CartPage() {
 
   
   useEffect(() => {
+    
+    document.documentElement.style.height = "auto";
+    document.body.style.height = "auto";
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  
+
+    document.body.style.overflow = "auto";
+  }, []);
+  
+
+  useEffect(() => {
     const timer = setTimeout(() => {
       setLoadingx(false);
     }, 20);
@@ -61,7 +73,7 @@ export default function CartPage() {
   return (
     <div className="">  
     
-    <div className=" px-[10vw] h-full mt-10 ">
+    <div className=" px-[10vw] h-full mt-10  xl:mt-[15vh]">
      
      
         <h1 className="text-3xl font-serif font-bold hover:text-green-400   "   >Shopping Cart   </h1>
