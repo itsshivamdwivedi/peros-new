@@ -18,9 +18,9 @@ const Content = () => {
 
   }, []);
   const images = [
-    "/assets/Jar.png", 
-    "/assets/Jar.png",
-    "/assets/Jar.png",
+    "/assets/slider-01.jpg", 
+    "/assets/slider-02.jpg",
+    "/assets/slider-03.jpg",
   ];
   
   const flavorIcons = [
@@ -68,7 +68,7 @@ const Content = () => {
             </Link>
           </div>
           <div className="md:w-1/2 w-full p-8" data-aos="slide-left" data-aos-duration="1500" data-aos-delay="200">
-            <img src="/assets/creamy.png" alt="Product 2" className="w-full h-full" />
+            <img src="/assets/jar 1.png" alt="Product 2" className="w-full h-full" />
           </div>
         </div>
       </section>
@@ -88,7 +88,7 @@ const Content = () => {
             </Link>
           </div>
           <div className="md:w-1/2 w-full p-8" data-aos="slide-left">
-            <img src="/assets/creamy.png" alt="Product 2" className="w-full h-full" />
+            <img src="/assets/jar 2.png" alt="Product 2" className="w-full h-full" />
           </div>
         </div>
       </section>
@@ -97,7 +97,7 @@ const Content = () => {
       <section className="flex items-center justify-center bg-gradient-radial from-white via-blue-200 to-blue-400 h-screen scroll-animate hidden sm:flex">
         <div className="max-w-full space-x-16 flex flex-col md:flex-row w-full overflow-hidden">
           <div className="md:w-1/2 w-full p-8" data-aos="slide-right" data-aos-duration="1200">
-            <img src="/assets/classic.png" alt="Product 3" className="w-full h-full" />
+            <img src="/assets/jar 3.png" alt="Product 3" className="w-full h-full" />
           </div>
           <div className="md:w-1/2 w-full p-8 flex flex-col justify-center items-start" data-aos="slide-left">
             <h2 className="text-5xl  text-green-800">Dark Chocolate</h2>
@@ -180,14 +180,14 @@ const Content = () => {
       <h1 className="text-5xl font-bold text-white">3x Flavours</h1>
     </div>
 
-    <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-6xl px-4">
-      <div className="md:w-1/2 w-full p-8 flex flex-col items-center">
-        <div className="relative w-full max-w-md">
+    <div className="flex flex-col  sm:w-full items-center justify-center w-full   ">
+      <div className="sm:w-full  flex flex-col items-center">
+        <div className=" w-full ">
           {/* Main Product Image */}
           <img
             src={images[currentIndex]}
             alt="Flavor variant"
-            className="w-full h-auto object-cover rounded-lg transition-opacity duration-300"
+            className="w-full h-auto  sm:w-full  transition-opacity duration-300"
           />
 
           {/* Flavor Icon Buttons */}

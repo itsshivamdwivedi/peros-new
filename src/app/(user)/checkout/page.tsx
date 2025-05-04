@@ -190,7 +190,6 @@ const Checkout = () => {
     return `ORD-${timestamp}-${randomStr}`;
   };
 
-  
   const storePaymentDetails = async (paymentDetails: PaymentDetails) => {
     if (
       !paymentDetails.orderId ||
@@ -203,38 +202,44 @@ const Checkout = () => {
       console.error("Incomplete payment details:", paymentDetails);
       return;
     }
-
+  
     try {
+      
       const userRef = doc(db, `users/${user.uid}`);
+  
+      // Log the data you're going to save for debugging purposes
       console.log("Saving payment details:", paymentDetails);
-
+  
+      // Store payment details directly in the user's document, appending to the `orders` array
       await setDoc(
         userRef,
         {
           orders: arrayUnion({
-            ...paymentDetails,
-            createdAt: Timestamp.now(),
+            ...paymentDetails, // Save the entire payment details in the `orders` array
+            createdAt: Timestamp.now(), // Use Firestore Timestamp
           }),
-          cart: [],
+          cart: [], // Optionally clear the cart after the order is completed
         },
-        { merge: true }
+        { merge: true } // Use merge to prevent overwriting the entire document
       );
+  
       console.log("Payment and cart details saved in the user's document");
+  
+      // Update the state with payment details
       setPaymentDetails(paymentDetails);
+  
+      // Show the success popup
       setShowPopup(true);
     } catch (error) {
       console.error("Error storing payment details: ", error);
     }
   };
-
-  
-  
   const handlePayment = async () => {
     if (cart.length === 0) {
       setShowCartEmptyError(true); // Show the cart empty error popup
       return;
     }
-
+  
     if (
       !address.firstName ||
       !address.lastName ||
@@ -247,34 +252,44 @@ const Checkout = () => {
       setShowFormPopup(true);
       return;
     }
-
+  
     if (!validateName(address.firstName) || !validateName(address.lastName)) {
       setShowNameError(true); // Show name error popup
       return;
     }
-
+  
     if (!validatePhone(address.phone)) {
       setShowPhoneError(true); // Show phone error popup
       return;
     }
-
+  
     if (!validateEmail(address.email)) {
       setShowEmailError(true); // Show email error popup
       return;
     }
-
+  
     if (!validatePincode(address.pincode)) {
       setShowPincodeError(true); // Show pincode error popup
       return;
     }
-
   
     setIsProcessing(true);
   
     try {
       const orderId = generateOrderId();
-     
-      
+  
+      // 👉 Create shipment
+      await fetch("/api/create-shipment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          address,
+          cart,
+          orderId,
+        }),
+      });
   
       if (paymentMethod === "Razorpay") {
         const response = await fetch("/api/create-order", {
@@ -305,8 +320,7 @@ const Checkout = () => {
               cart,
               subtotal,
               mrpTotal,
-              userEmail:user.email,
-             
+              userEmail: user.email,
             };
   
             storePaymentDetails(paymentDetails);
@@ -330,7 +344,7 @@ const Checkout = () => {
           cart,
           subtotal,
           mrpTotal,
-          userEmail:user.email,
+          userEmail: user.email,
         };
   
         storePaymentDetails(paymentDetails);
@@ -341,7 +355,6 @@ const Checkout = () => {
       setIsProcessing(false);
     }
   };
-
   
   
   return (

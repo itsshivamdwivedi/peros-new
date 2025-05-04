@@ -46,7 +46,7 @@ const peanutButterVariants: Variant[] = [
         id: uuidv4(),
         name: "Classic Creamy",
         images: [
-          "/assets/newjar.png",
+          "/assets/jar 1.png",
         
       
         ],
@@ -61,7 +61,7 @@ const peanutButterVariants: Variant[] = [
         id:  uuidv4(),
         name: "Crunchy Honey",
         images: [
-        "/assets/newjar.png",
+        "/assets/jar 2.png",
       
         ],
         description:
@@ -75,7 +75,7 @@ const peanutButterVariants: Variant[] = [
         id:  uuidv4(),
         name: "Dark Chocolate",
         images: [
-        "/assets/newjar.png",
+        "/assets/jar 3.png",
           
          
           
@@ -100,7 +100,7 @@ const Products: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<Size>(
     selectedVariant.sizes[0]
   );
-
+  const [showPopup, setShowPopup] = useState(false);
 
   
   
@@ -135,11 +135,18 @@ const Products: React.FC = () => {
       pricel:selectedSize.pricel,
     };
     addToCart(cartItem); 
+    setShowPopup(true);
+    setTimeout(() => setShowPopup(false), 2500);
 
   };
 
   return (
     <div className="w-full  lg:sticky top-20 max-h-screen overflow-auto relative z-10 sm:mt-4 ">
+      {showPopup && (
+  <div className="fixed top-52 left-1/2 transform -translate-x-1/2 z-50 bg-green-600 text-white px-6 py-2 rounded shadow-md transition-all duration-300">
+    Successfully added product to the cart!
+  </div>
+)}
       
       <div className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 flex flex-col lg:flex-row xl:mt-10  mt-4 ">
       
@@ -173,7 +180,7 @@ const Products: React.FC = () => {
           </div> */}
         </div>
 
-        <div className="w-full lg:w-1/2 xl:mt-16  "  >
+        <div className="w-full lg:w-1/2 xl:mt-16 mt-10 "  >
           <h1 className="text-3xl font-semibold mb-1 font-sans">{selectedVariant.name}</h1>
           {/* <p className="text-lg text-gray-500 mb-4 ">{selectedVariant.description}</p> */}
           <h2 className="text-sm font-semibold flex text-yellow-200 mb-5">
@@ -242,6 +249,7 @@ const Products: React.FC = () => {
           <div className="flex items-end"><button className='w-full text-sm md:w-[18vw] disabled:bg-pink-200 disabled:text-white disabled:ring-none ring-1 bg-green-600 px-4 py-2 rounded-md font-semibold hover:text-white hover:bg-amber-400 disabled:cursor-not-allowed text-white'
        
        onClick={handleAddToCart}
+    
        
        >Add to Cart </button></div> 
 

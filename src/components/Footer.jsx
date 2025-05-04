@@ -54,7 +54,7 @@ const Footer = () => {
 
             <div className="text-left">
               <h4 className="text-xl font-bold font-serif mb-4">Contact</h4>
-              <p className="text-gray-400">Email: contact@peros.com</p>
+              <p className="text-gray-400">Email:Support@peros.in</p>
               <p className="text-gray-400">Phone: +123 456 7890</p>
               <p className="text-gray-400">
                 Address: 123 Peros Street, Switzerland
@@ -62,16 +62,17 @@ const Footer = () => {
             </div>
 
             <div className="text-left">
+
               <h4 className="text-xl font-bold font-serif mb-4">Follow Us</h4>
               <div className="flex gap-3">
                 {[
-                  { name: "Instagram", url: "/assets/footer/instagram.png" },
+                  { name: "https://www.instagram.com/peros.in?igsh=MTVjYzJxbzc2a2JhNw== ", url: "/assets/footer/instagram.png" ,href:"https://x.com/peros_in"},
                   { name: "Facebook", url: "/assets/footer/facebook.png" },
-                  { name: "Twitter", url: "/assets/footer/twitter.png" },
+                  { name: "https://x.com/peros_in", url: "/assets/footer/twitter.png" },
                 ].map((icon) => (
                   <a
                     key={icon.name}
-                    href={`https://www.${icon.name.toLowerCase()}.com/peros`}
+                    href={`${icon.name.toLowerCase()}`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
