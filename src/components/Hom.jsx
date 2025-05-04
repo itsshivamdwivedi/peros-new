@@ -5,13 +5,10 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { ScrollControls, Environment, useScroll } from "@react-three/drei";
 import { Model } from "./Model2";
 import * as THREE from "three";
-import Content from "./Content";
 
 export default function App() {
   const modelRef = useRef();
   const [animationComplete, setAnimationComplete] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0, z: 0 });
-  const [currentSection, setCurrentSection] = useState(0); 
 
   useEffect(() => {
     document.body.style.overflow = animationComplete ? "auto" : "hidden";
@@ -21,9 +18,8 @@ export default function App() {
     <div
       style={{
         height: "100vh",
-        width: "full",
+        width: "100%",
         position: "relative",
-        
         overflow: animationComplete ? "auto" : "hidden",
       }}
     >
@@ -61,117 +57,60 @@ export default function App() {
           <directionalLight position={[5, 10, 5]} intensity={1.5} castShadow />
           <Environment files="/hdr/lobby.hdr" />
 
-          <ScrollControls pages={15} damping={0.5}>  
+          <ScrollControls pages={3} damping={0.5}>
             <AnimatedModel
               modelRef={modelRef}
               onComplete={() => setAnimationComplete(true)}
-              setPosition={setPosition}
-              currentSection={currentSection}
-              setCurrentSection={setCurrentSection} 
+              totalPages={3}
             />
           </ScrollControls>
         </Canvas>
       </div>
-    {/* <Content/> */}
     </div>
   );
 }
 
-function AnimatedModel({
-  modelRef,
-  onComplete,
-  setPosition,
-  currentSection,
-  setCurrentSection,
-}) {
+function AnimatedModel({ modelRef, onComplete, totalPages }) {
   const scroll = useScroll();
-  const targetRotation = useRef(new THREE.Vector3(0, 0, 0));
-  const targetScale = useRef(1); 
-  const targetPosition = useRef(new THREE.Vector3(0, 0, 0));
+  const hasCompleted = useRef(false);
 
-  const numSections = 5; 
-  const [scrolling, setScrolling] = useState(false); 
+  useFrame((_, delta) => {
+    const normalizedProgress = scroll.offset * totalPages; // 0 to 3
+    const clampedProgress = Math.min(normalizedProgress / totalPages, 1); // 0–1
 
-  useEffect(() => {
-   
-    if (scrolling) {
-      const newSection = Math.floor(scroll.offset * numSections);
-      if (newSection !== currentSection) {
-        setCurrentSection(newSection);
-        setScrolling(false);
-      }
-    }
-  }, [scroll.offset, currentSection, scrolling, numSections, setCurrentSection]);
+    const rotation = clampedProgress * Math.PI * 2;
+    const scale = 2 - clampedProgress * 1.3;
+    const positionY = -0.5 * (scale - 1);
 
-  const handleScroll = (e) => {
-    if (!scrolling) {
-      setScrolling(true); 
-    }
-  };
-
-  useEffect(() => {
-    const handleTouchStart = () => setScrolling(true);
-    const handleTouchEnd = () => setScrolling(false);
-  
-    window.addEventListener("touchstart", handleTouchStart);
-    window.addEventListener("touchend", handleTouchEnd);
-  
-    return () => {
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, []);
-  
-  useFrame((state, delta) => {
-    const sectionRatio = scroll.offset;
-    const newSection = Math.floor(scroll.offset * numSections);
-    if (newSection !== currentSection) {
-      setCurrentSection(newSection);
-    }
-  
-    targetRotation.current.set(
-      Math.PI * 2 * sectionRatio,
-      Math.PI * 2 * sectionRatio,
-      0
-    );
-    targetScale.current = 2 - sectionRatio * 1.3;
-    targetPosition.current.set(0, -0.5 * (targetScale.current - 1), 0);
-  
     if (modelRef.current) {
       modelRef.current.rotation.x = THREE.MathUtils.lerp(
         modelRef.current.rotation.x,
-        targetRotation.current.x,
+        rotation,
         delta * 2
       );
       modelRef.current.rotation.y = THREE.MathUtils.lerp(
         modelRef.current.rotation.y,
-        targetRotation.current.y,
+        rotation,
         delta * 2
       );
       modelRef.current.scale.lerp(
-        new THREE.Vector3(
-          targetScale.current,
-          targetScale.current,
-          targetScale.current
-        ),
+        new THREE.Vector3(scale, scale, scale),
         delta * 2
       );
-      modelRef.current.position.lerp(targetPosition.current, delta * 2);
-  
-      const { x, y, z } = modelRef.current.position;
-      setPosition({ x, y, z });
-  
-      if (currentSection === numSections - 1) {
-        onComplete();
-      }
+      modelRef.current.position.lerp(
+        new THREE.Vector3(0, positionY, 0),
+        delta * 2
+      );
+    }
+
+    if (clampedProgress >= 0.99 && !hasCompleted.current) {
+      hasCompleted.current = true;
+      onComplete();
     }
   });
 
   return <Model ref={modelRef} position={[0, 0, 0]} />;
 }
-
-
-
 
 // "use client";
 

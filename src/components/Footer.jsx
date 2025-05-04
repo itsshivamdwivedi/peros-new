@@ -55,9 +55,17 @@ const Footer = () => {
             <div className="text-left">
               <h4 className="text-xl font-bold font-serif mb-4">Contact</h4>
               <p className="text-gray-400">Email:Support@peros.in</p>
-              <p className="text-gray-400">Phone: +123 456 7890</p>
+              <p className="text-gray-400"><div className="flex gap-1"><div>
+                Phone:
+              </div>
+              <div> <span>+91 7715889772 <br />
+              +91 8424981473 <br />
+              +91 9762866553</span></div>
+
+              </div>
+              </p>
               <p className="text-gray-400">
-                Address: 123 Peros Street, Switzerland
+                Address: 123 Peros Street, Mumbai
               </p>
             </div>
 

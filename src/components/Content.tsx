@@ -18,9 +18,9 @@ const Content = () => {
 
   }, []);
   const images = [
-    "/assets/slider-01.jpg", 
-    "/assets/slider-02.jpg",
-    "/assets/slider-03.jpg",
+    "/assets/slider-01-min.jpg", 
+    "/assets/slider-02-min.jpg",
+    "/assets/slider-03-min.jpg",
   ];
   
   const flavorIcons = [
@@ -73,6 +73,24 @@ const Content = () => {
         </div>
       </section>
 
+      <section className="flex items-center justify-center bg-gradient-radial from-white via-blue-200 to-blue-400 h-screen scroll-animate hidden sm:flex">
+        <div className="max-w-full space-x-16 flex flex-col md:flex-row w-full overflow-hidden">
+          <div className="md:w-1/2 w-full p-8" data-aos="slide-right" data-aos-duration="1200">
+            <img src="/assets/jar 3.png" alt="Product 3" className="w-full h-full" />
+          </div>
+          <div className="md:w-1/2 w-full p-8 flex flex-col justify-center items-start" data-aos="slide-left">
+            <h2 className="text-5xl  text-green-800">Dark Chocolate</h2>
+            <h2 className="text-5xl  text-green-800">Classic</h2>
+            <Link href={"/products"}>
+            
+            <button className="bg-gradient-to-r from-green-600 to-green-800 text-white py-3 px-8 my-8 font-semibold rounded-md uppercase transform hover:scale-105 transition" >
+              Buy Now
+            </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
 
       {/* Product 2 */}
       <section className="flex items-center justify-center bg-gradient-radial from-white via-blue-200 to-blue-400 h-screen scroll-animate hidden sm:flex">
@@ -94,23 +112,7 @@ const Content = () => {
       </section>
 
       {/* Product 3 */}
-      <section className="flex items-center justify-center bg-gradient-radial from-white via-blue-200 to-blue-400 h-screen scroll-animate hidden sm:flex">
-        <div className="max-w-full space-x-16 flex flex-col md:flex-row w-full overflow-hidden">
-          <div className="md:w-1/2 w-full p-8" data-aos="slide-right" data-aos-duration="1200">
-            <img src="/assets/jar 3.png" alt="Product 3" className="w-full h-full" />
-          </div>
-          <div className="md:w-1/2 w-full p-8 flex flex-col justify-center items-start" data-aos="slide-left">
-            <h2 className="text-5xl  text-green-800">Dark Chocolate</h2>
-            <h2 className="text-5xl  text-green-800">Classic</h2>
-            <Link href={"/products"}>
-            
-            <button className="bg-gradient-to-r from-green-600 to-green-800 text-white py-3 px-8 my-8 font-semibold rounded-md uppercase transform hover:scale-105 transition" >
-              Buy Now
-            </button>
-            </Link>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Product 4 */}
       <section className="scroll-animate bg-black pt-80 pb-80">
@@ -187,7 +189,7 @@ const Content = () => {
           <img
             src={images[currentIndex]}
             alt="Flavor variant"
-            className="w-full h-auto  sm:w-full  transition-opacity duration-300"
+            className="w-full h-auto  sm:w-full  transition-opacity duration-100 "
           />
 
           {/* Flavor Icon Buttons */}
