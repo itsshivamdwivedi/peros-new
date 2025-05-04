@@ -89,7 +89,7 @@ function AnimatedModel({
   const targetScale = useRef(1); 
   const targetPosition = useRef(new THREE.Vector3(0, 0, 0));
 
-  const numSections = 15; 
+  const numSections = 5; 
   const [scrolling, setScrolling] = useState(false); 
 
   useEffect(() => {
