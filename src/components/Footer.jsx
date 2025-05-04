@@ -41,21 +41,15 @@ const Footer = () => {
 
             <div className="text-left">
               <h4 className="text-xl font-bold font-serif mb-4">Quick Links</h4>
-              {["Home", "About", "Products", "Contact"].map((link) => (
-                <a
-                  key={link}
-                  href={`#${link.toLowerCase()}`}
-                  className="block text-gray-400 hover:text-black mb-2"
-                >
-                  {link}
-                </a>
-              ))}
+               <div className=" text-gray-400 hover:text-black mb-2 "><a href="/">Home</a> <br />
+              <a href="/products">Product</a> <br />
+             </div>
             </div>
 
             <div className="text-left">
               <h4 className="text-xl font-bold font-serif mb-4">Contact</h4>
               <p className="text-gray-400">Email:Support@peros.in</p>
-              <p className="text-gray-400"><div className="flex gap-1"><div>
+              <div className="text-gray-400"><div className="flex gap-1"><div>
                 Phone:
               </div>
               <div> <span>+91 7715889772 <br />
@@ -63,7 +57,7 @@ const Footer = () => {
               +91 9762866553</span></div>
 
               </div>
-              </p>
+              </div>
               <p className="text-gray-400">
                 Address: 123 Peros Street, Mumbai
               </p>
