@@ -107,7 +107,7 @@ export default function CartPage() {
                     <img
                       src={item.image || "/assets/placeholder.png"} // Default image
                       alt={item.title}
-                      className="w-20 h-20 object-cover rounded-lg xl:object-cover xl:w-[50wh] xl:h-[20vh]"
+                      className="w-20 h-20 object-cover rounded-lg xl:object-contain xl:w-[50wh] xl:h-[20vh]"
                     />
                     <div>
                       <h2 className="text-lg font-semibold font-serif xl:px">{item.title}</h2>

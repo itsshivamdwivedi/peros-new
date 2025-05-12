@@ -8,7 +8,8 @@ import { db } from "@/lib/firebase";// Assuming you've already exported db from 
 
 import Router from "next/router";
 import { useAuth } from "@/contexts/AuthContext";
-import { Timestamp } from "firebase/firestore"; 
+import { Timestamp } from "firebase/firestore";
+import Pric from "../../../components/pric" 
 import { doc, setDoc,   arrayUnion } from "firebase/firestore";
 import Link from "next/link";
 
@@ -65,6 +66,7 @@ const Checkout = () => {
   const router =Router
   const { user } = useAuth();
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
+   const [agreed, setAgreed] = useState(false);
   const [showFormPopup, setShowFormPopup] = useState(false); // Popup for form warning
   const [showPopup, setShowPopup] = useState(false); // Payment success popup
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
@@ -431,6 +433,7 @@ const Checkout = () => {
             />
             Cash on Delivery
           </label>
+           <Pric agreed={agreed} setAgreed={setAgreed} />
         </div>
 
         {/* Order Summary */}
@@ -466,17 +469,24 @@ const Checkout = () => {
                 </div>
               )}
             </div>
+          
           </div>
+          
         </div>
 
         {/* Proceed to Payment Button */}
         <button
           onClick={handlePayment}
-          disabled={isProcessing}
-          className="bg-green-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-orange-500"
-        >
+          disabled={!agreed || isProcessing}
+        className={`px-4 py-2 rounded-md font-semibold transition-colors duration-300 mt-4 ${
+    !agreed || isProcessing
+      ? "bg-green-200 text-white cursor-not-allowed"
+      : "bg-green-500 text-white hover:bg-orange-500"
+  }`}
+>
           {isProcessing ? "Processing..." : "Pay Now"}
         </button>
+       
       </div>
 
 

@@ -39,55 +39,87 @@ type Variant = {
   images: string[];
   description: string;
   sizes: Size[];
+ 
+  detailedDescription: string;
+  detailedDescription2: string;
+  detailedDescription3: string;
+  shelfLife: string;
 };
 
 const peanutButterVariants: Variant[] = [
   {
-        id: uuidv4(),
-        name: "Classic Creamy",
-        images: [
-          "/assets/jar 1.png",
-        
-      
-        ],
-        description:
-          "Smooth texture made with 100% roasted peanuts. Perfect for spreading on toast or baking.",
-        sizes: [
-          { label: "350g", price: 157 ,pricel:200},
-          { label: "1kg", price: 475,pricel:500},
-        ],
-      },
-      {
-        id:  uuidv4(),
-        name: "Crunchy Honey",
-        images: [
-        "/assets/jar 2.png",
-      
-        ],
-        description:
-          "Chunky texture with real peanut bits and a touch of honey for natural sweetness.",
-        sizes: [
-          { label: "350g", price: 170,pricel:200},
-          { label: "1kg", price: 500,pricel:550},
-        ],
-      },
-      {
-        id:  uuidv4(),
-        name: "Dark Chocolate",
-        images: [
-        "/assets/jar 3.png",
-          
-         
-          
-        ],
-        description:
-          "A blend of peanuts, dark cocoa, and sea salt for a rich, indulgent flavor.",
-        sizes: [
-          { label: "350g", price: 180,pricel:210},
-          { label: "1kg", price: 525,pricel:600}
-        ],
-      },
+    id: uuidv4(),
+    name: "Classic Creamy",
+    images: [
+      "/assets/jar 3.png",
+      "/assets/slider-01-min.jpg",
+      "/assets/slider-02-min.jpg",
+      "/assets/slider-03-min.jpg"
+    ],
+    description:
+      "Peros Classic Creamy Peanut Butter is crafted for those who love a smooth, rich spread without any compromise on quality. Made from premium-grade roasted peanuts, this variant delivers a naturally delicious flavor with a velvety texture that melts on your tongue.",
+    detailedDescription:
+      "At Peros, we produce all our nut butters in an FSSAI approved and ISO 22000 certified facility, ensuring the highest food safety and nutritional standards.",
+    detailedDescription2:
+      "Freshly made in small batches daily, our butters are suitable for kids, adults, and the health-conscious alike.",
+    detailedDescription3:
+      "Perfect for daily snacking, breakfast, or as a versatile ingredient in your kitchen.",
+    shelfLife: "12 Months",
+    sizes: [
+      { label: "350g", price: 157, pricel: 200 },
+      { label: "1kg", price: 475, pricel: 500 },
+    ],
+  },
+  {
+    id: uuidv4(),
+    name: "Crunchy Honey",
+    images: [
+      "/assets/jar 2.png",
+      "/assets/slider-01-min.jpg",
+      "/assets/slider-02-min.jpg",
+      "/assets/slider-03-min.jpg"
+    ],
+    description:
+      "Chunky texture with real peanut bits and a touch of honey for natural sweetness.",
+    detailedDescription:
+      "Peros Crunchy Honey Peanut Butter combines roasted peanuts with natural honey and crunchy peanut bits, offering a textured and flavorful experience with every bite.",
+    detailedDescription2:
+      "Manufactured in our state-of-the-art ISO 22000 and FSSAI certified plant, each jar is made with love, quality, and cleanliness at the forefront.",
+    detailedDescription3:
+      "Our commitment to freshness means every batch is made daily and delivered straight to you with full flavor intact.",
+    shelfLife: "12 Months",
+    sizes: [
+      { label: "350g", price: 170, pricel: 200 },
+      { label: "1kg", price: 500, pricel: 550 },
+    ],
+  },
+  {
+    id: uuidv4(),
+    name: "High Protein Dark Chocolate",
+    images: [
+      "/assets/jar 1.png",
+      "/assets/slider-01-min.jpg",
+      "/assets/slider-02-min.jpg",
+      "/assets/slider-03-min.jpg"
+    ],
+    description:
+      "A blend of peanuts, dark cocoa, and sea salt for a rich, indulgent flavor.",
+    detailedDescription:
+      "Peros High Protein Dark Chocolate Peanut Butter is a powerful blend of dark cocoa, roasted peanuts, and imported whey protein — designed for fitness enthusiasts and chocolate lovers.",
+    detailedDescription2:
+      "Crafted in our ISO 22000 certified and FSSAI approved facility, every jar upholds the highest standards of hygiene, quality, and freshness.",
+    detailedDescription3:
+      "We make our protein-packed peanut butters in fresh batches daily to lock in maximum taste and nutrition.",
+    shelfLife: "12 Months",
+    sizes: [
+      { label: "350g", price: 180, pricel: 210 },
+      { label: "1kg", price: 525, pricel: 600 }
+    ],
+  }
 ];
+
+
+
 
 const Products: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
@@ -151,7 +183,7 @@ const Products: React.FC = () => {
       <div className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 flex flex-col lg:flex-row xl:mt-10  mt-4 ">
       
         <div className="w-full lg:w-1/2  lg:sticky top-20 h-max" >
-          <div className="h-[400px]  relative">
+          <div className="h-[400px]  relative sm:mb-[10vh]">
             <Image
               src={currentImage}
               width={400}
@@ -163,7 +195,7 @@ const Products: React.FC = () => {
 
             />
           </div>
-          {/* <div className="flex mt-4">
+          <div className="flex mt-4 sm:mr-[2vw]">
             {selectedVariant.images.map((image, index) => (
               <Image
               width={80}
@@ -171,13 +203,13 @@ const Products: React.FC = () => {
                 key={`${selectedVariant.id}-image-${index}`}
                 src={image}
                 alt={`Thumbnail ${index + 1}`}
-                className={`w-1/4 h-32 px-1 mt-8 rounded cursor-pointer object-cover transition-transform duration-300 transform hover:scale-110 ${
-                  currentImage === image ? "" : "opacity-20"
+                className={`w-1/4 h-32 px-1 mt-8 rounded cursor-pointer object-contain transition-transform duration-300 transform hover:scale-110 ${
+                  currentImage === image ? "" : "opacity-40"
                 }`}
                 onClick={() => setCurrentImage(image)}
               />
             ))}
-          </div> */}
+          </div>
         </div>
 
         <div className="w-full lg:w-1/2 xl:mt-16 mt-10 "  >
@@ -265,8 +297,19 @@ const Products: React.FC = () => {
 
           
         </div>
+         {selectedVariant && (
+   <div className="mt-4 space-y-3 text-left">
+  <p>{selectedVariant.detailedDescription}</p>
+  <p>{selectedVariant.description}</p>
+  <p>{selectedVariant.detailedDescription2}</p>
+  <p>{selectedVariant.detailedDescription3}</p>
+  <p className="text-green-600">{selectedVariant.shelfLife}</p>
+</div>
+)}
+<div className="px-[20vw] m-3"><div className="border-b-4 border-green-500 ..."></div>
+      
 
-      </div>
+      </div></div>
 
 
     </div>

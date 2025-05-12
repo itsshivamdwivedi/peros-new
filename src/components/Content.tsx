@@ -18,9 +18,10 @@ const Content = () => {
 
   }, []);
   const images = [
-    "/assets/slider-01-min.jpg", 
-    "/assets/slider-02-min.jpg",
-    "/assets/slider-03-min.jpg",
+    "/assets/jar 1.png",
+    "/assets/jar 2.png",
+    "/assets/jar 3.png",
+   
   ];
   
   const flavorIcons = [
@@ -183,13 +184,13 @@ const Content = () => {
     </div>
 
     <div className="flex flex-col  sm:w-full items-center justify-center w-full   ">
-      <div className="sm:w-full  flex flex-col items-center">
+      <div className="  flex flex-col items-center">
         <div className=" w-full ">
           {/* Main Product Image */}
           <img
             src={images[currentIndex]}
             alt="Flavor variant"
-            className="w-full h-auto  sm:w-full  transition-opacity duration-100 "
+            className="w-full h-auto    transition-opacity duration-100 "
           />
 
           {/* Flavor Icon Buttons */}
