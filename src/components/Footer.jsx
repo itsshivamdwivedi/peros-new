@@ -2,6 +2,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 // m
 
 const Footer = () => {
@@ -41,9 +42,9 @@ const Footer = () => {
 {/* hell */}
             <div className="text-left">
               <h4 className="text-xl font-bold font-serif mb-4">Quick Links</h4>
-               <div className=" text-gray-400 hover:text-black mb-2 "><a href="/">Home</a> <br />
-              <a href="/products">Product</a> <br />
-              <a href="/terms">Terms & Conditions</a> <br />
+               <div className=" text-gray-400 hover:text-black mb-2 "><Link href="/">Home</Link> <br />
+              <Link href="/products">Product</Link> <br />
+              <Link href="/terms">Terms & Conditions</Link> <br />
               
              </div>
             </div>
