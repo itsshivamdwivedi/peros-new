@@ -170,7 +170,7 @@ export default function CartPage() {
 
 
 
-      <Footer/>
+    <div className="mt-10">  <Footer/></div>
   
      
       
