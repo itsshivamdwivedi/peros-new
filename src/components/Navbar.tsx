@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { UserCircle2, Menu, X } from "lucide-react";
+import { UserCircle2, Menu, X, Badge, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import AuthContextProvider from "@/contexts/AuthContext";
@@ -68,6 +68,7 @@ export default function Navbar() {
                 <UserCircle2 size={22} />
               </button>
             </Link>
+           
 
             {/* Mobile Menu Toggle */}
             <div className="md:hidden">
@@ -136,6 +137,7 @@ export default function Navbar() {
                 <LogoutButton />
               </AuthContextProvider>
             </div>
+            
           </div>
         </>
       )}

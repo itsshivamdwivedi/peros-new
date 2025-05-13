@@ -179,7 +179,7 @@ const Orders = () => {
 
      <div className="flex flex-col gap-0">
       <div  className=" text-3xl font-serif font-bold hover:text-green-400    ">Your Orders</div>
-      <div className="border-b-4 w-28 border-green-500  "> </div> 
+      <div className="border-b-4 w-28 border-green-500 mb-8 "> </div> 
 </div>
 
 

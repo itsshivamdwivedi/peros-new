@@ -38,19 +38,18 @@ export default function HeaderClientButtons() {
       </Link> */}
       <Link href={`/cart`}>
         {(data?.carts?.length ?? 0) != 0 && (
-          <Badge
-            variant="solid"
-            size="sm"
-            className="text-white bg-green-500 py-1 text-[12px]"
-            content={data?.carts?.length ?? 0}
-          >
-            <button
-              title="My Cart"
-              className="h-8 w-8 flex justify-center items-center rounded-full hover:bg-gray-50"
-            >
-              <ShoppingCart size={28} />
-            </button>
-          </Badge>
+       <div className="relative">
+  <button
+    title="My Cart"
+    className="h-8 w-8 flex justify-center items-center rounded-full hover:bg-gray-50 relative"
+  >
+    <ShoppingCart size={28} />
+    <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white rounded-full text-[12px] flex items-center justify-center z-10">
+      {data?.carts?.length ?? 0}
+    </div>
+  </button>
+</div>
+
         )}
         {(data?.carts?.length ?? 0) === 0 && (
           <button
