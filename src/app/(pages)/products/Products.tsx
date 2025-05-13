@@ -123,6 +123,7 @@ const peanutButterVariants: Variant[] = [
 
 const Products: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
+    const productDetailRef = useRef<HTMLDivElement>(null);
   const [selectedVariant, setSelectedVariant] = useState<Variant>(
     peanutButterVariants[0]
   );
@@ -140,6 +141,12 @@ const Products: React.FC = () => {
 
   const { addToCart } = useCart(); 
 
+  const [variantSelections, setVariantSelections] = useState<Record<string, string>>({});
+
+const handleSizeChange = (variantId: string, sizeLabel: string) => {
+  setVariantSelections((prev) => ({ ...prev, [variantId]: sizeLabel }));
+};
+
   const handleVariantClick = (variantId: string) => {
     const variant = peanutButterVariants.find((v) => v.id === variantId);
     if (variant) {
@@ -149,6 +156,20 @@ const Products: React.FC = () => {
     }
   };
 
+
+   const handleVariantClick2 = (variant: Variant, sizeOverride?: Size) => {
+    setSelectedVariant(variant);
+    setCurrentImage(variant.images[0]);
+    setSelectedSize(sizeOverride || variant.sizes[0]);
+    setQuantity(1);
+
+    // Scroll to top of product detail view
+    setTimeout(() => {
+      productDetailRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
+ 
   const handleSizeClick = (sizeLabel: string) => {
     const size = selectedVariant.sizes.find((s) => s.label === sizeLabel);
     if (size) {
@@ -180,7 +201,7 @@ const Products: React.FC = () => {
   </div>
 )}
       
-      <div className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 flex flex-col lg:flex-row xl:mt-10  mt-4 ">
+      <div className="px-4 md:px-8 lg:px-16 xl:px-32 2xl:px-64 flex flex-col lg:flex-row xl:mt-10  mt-4  " ref={productDetailRef}>
       
         <div className="w-full lg:w-1/2  lg:sticky top-20 h-max" >
           <div className="h-[400px]  relative sm:mb-[10vh]">
@@ -478,7 +499,7 @@ Switch today and snack smarter!
 
     <div className="relative w-full  flex flex-col items-center text-center px-4 md:px-12 sm:flex">
       {/* Gradient Background */}
-      <div className="absolute top-0 left-0 w-full md:h-[250px] bg-contain bg-no-repeat h-full  sm:absolute sm:-z-10  " > <img src="/assets/gradient 3-02.png" alt=""  /></div>
+      <div className="absolute top-0 left-0 w-full md:h-[250px] bg-contain bg-no-repeat h-full  sm:absolute sm:-z-10   " > <img src="/assets/gradient 3-022.png" className="hidden sm:inline" alt=""  />  <img src="/assets/gradient 3-02.png" className="sm:hidden" alt=""  /></div>
      
       
       {/* Heading */}
@@ -502,10 +523,13 @@ Switch today and snack smarter!
         />
       </div>
     </div>
-    
 
 
-  <div className="bg-white sm:w-full sm:py-10">
+    <div>
+
+      
+
+  <div className="bg-white  sm:w-full sm:py-10">
   <div className="max-w-md mx-auto p-6 text-center bg-white shadow-lg sm:shadow-none rounded-2xl  sm:w-[90vw] ">
       <h2 className="text-5xl px-8 font-bold">Customer Reviews</h2>
       <div className="flex justify-center items-center my-2">
@@ -547,6 +571,76 @@ Switch today and snack smarter!
         </button>
       </div>
     </div>
+  </div>
+  
+
+
+    </div>
+    
+
+
+
+  <div className="sm:bg-white ">
+    {/* OTHER VARIANTS */}
+   <div className="mt-20 ">
+  <div className="text-xl flex justify-center font-bold mb-6 sm:text-3xl">You May Also Like</div>
+  <div className="px-[20vw]  m-3  ">
+    <div className="border-b-4 sm:hidden  border-green-500"></div>
+    <div className="border-b-8 ml-23 mr-23 hidden sm:inline border-green-500"></div>
+  </div>
+
+  {/* Horizontal scroll area */}
+  <div className="w-full flex  overflow-x-auto  scroll-hide sm:mt-10 ">
+    <div className="flex sm:flex-col gap-6  sm:gap-14 px-4 sm:ml-[25vw] ">
+      {peanutButterVariants.map((variant) => {
+        const selectedLabel = variantSelections[variant.id] || variant.sizes[0].label;
+        const selectedSize = variant.sizes.find((s) => s.label === selectedLabel)!;
+
+        return (
+          <div
+            key={variant.id}
+            className="min-w-[45vw] max-w-[45vw]  border rounded-lg p-4 shadow hover:shadow-md"
+          >
+            <img
+              src={variant.images[0]}
+              alt={variant.name}
+              className="w-32 h-32 sm:h-[35vh] sm:w-[35] mx-auto object-contain mb-2"
+            />
+            <h3 className="text-center font-semibold mb-1 sm:text-3xl">{variant.name}</h3>
+
+            <select
+              className="w-[20vw] px-2 ml-6 py-1 mt-1 sm:mt-5 border rounded mb-3 sm:ml-[19vw] sm:w-[5vw]"
+              value={selectedLabel}
+              onChange={(e) => handleSizeChange(variant.id, e.target.value)}
+            >
+              {variant.sizes.map((size) => (
+                <option key={size.label} value={size.label}>
+                  {size.label}
+                </option>
+              ))}
+            </select>
+
+            <div className="text-center text-lg  font-semibold text-green-600">
+              ₹{selectedSize.price}
+              <span className="text-sm text-gray-400 line-through ml-2">
+                ₹{selectedSize.pricel}
+              </span>
+            </div>
+
+            <button
+              onClick={() => handleVariantClick2(variant, selectedSize)}
+              className="w-full mt-2 sm:w-[25vw] sm:ml-[8vw] bg-green-500 sm:mt-5 text-white py-1 rounded hover:bg-green-600"
+            >
+              Buy
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</div>
+
+
   </div>
 
   <div className="sm:bg-white sm:w-full sm:py-10 ">

@@ -226,3 +226,17 @@ body {
     @apply font-spartan font-semibold;
   }
 }
+
+
+.scroll-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.scroll-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.bg-gradient-yellow {
+  background: #F4DD74;
+  background: linear-gradient(135deg, #F4DD74, #FFFF96);
+}
