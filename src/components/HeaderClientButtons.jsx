@@ -41,7 +41,7 @@ export default function HeaderClientButtons() {
        <div className="relative">
   <button
     title="My Cart"
-    className="h-8 w-8 flex justify-center items-center rounded-full hover:bg-gray-50 relative"
+    className="h-6 w-6 flex justify-center items-center rounded-full hover:bg-gray-50 relative"
   >
     <ShoppingCart size={28} />
     <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white rounded-full text-[12px] flex items-center justify-center z-10">
