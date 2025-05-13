@@ -249,26 +249,9 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
             <h3 className="text-black font-sans">Tax included</h3>
           </div>
 
-          <div className="flex flex-col gap-6 mt-4">
-            <h4 className=" font-semibold font-serif">Variant</h4>
-            <div className="flex items-center justify-between w-full gap-3">
-              {peanutButterVariants.map((variant) => (
-                <button
-                              key={`variant-${variant.id}`}
-                              onClick={() => handleVariantClick(variant.id)}
-                              className={` font-bold text-sm rounded-md h-[8vh] py-1 px-4 hover:bg-amber-400 cursor-pointer font-serif  ${
-                                variant.id === selectedVariant.id
-                                  ? "bg-green-500 text-white"
-                                  : "bg-gray-200"
-                              }`}
-                            >
-                              {variant.name}
-                            </button>
-              ))}
-            </div>
-          </div>
+          
 
-          <div className="flex flex-col gap-6 mt-4">
+          <div className="flex flex-col gap-4 mt-4">
             <h4 className="font-semibold font-serif">Size</h4>
             <div className="flex items-center gap-3">
               {selectedVariant.sizes.map((size) => (
