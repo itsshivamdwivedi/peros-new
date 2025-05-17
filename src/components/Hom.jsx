@@ -112,6 +112,7 @@ function AnimatedModel({ modelRef, onComplete, totalPages }) {
   return <Model ref={modelRef} position={[0, 0, 0]} />;
 }
 
+
 // "use client";
 
 // import React, { useRef, useState, useEffect, useCallback } from "react";

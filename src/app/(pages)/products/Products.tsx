@@ -8,6 +8,8 @@ import Link from "next/link";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { v4 as uuidv4 } from "uuid";
 import Footer from "@/components/Footer";
+import { useRouter, useSearchParams } from "next/navigation"; 
+
 
 
 import { FaStar, FaChevronLeft, FaChevronRight, FaStarHalfAlt } from "react-icons/fa";
@@ -39,6 +41,7 @@ type Variant = {
   images: string[];
   description: string;
   sizes: Size[];
+  id1:number;
  
   detailedDescription: string;
   detailedDescription2: string;
@@ -49,6 +52,7 @@ type Variant = {
 const peanutButterVariants: Variant[] = [
   {
     id: uuidv4(),
+    id1:1,
     name: "Classic Creamy",
     images: [
       "/assets/jar 3.png",
@@ -72,6 +76,7 @@ const peanutButterVariants: Variant[] = [
   },
   {
     id: uuidv4(),
+    id1:2,
     name: "Crunchy Honey",
     images: [
       "/assets/jar 2.png",
@@ -95,6 +100,7 @@ const peanutButterVariants: Variant[] = [
   },
   {
     id: uuidv4(),
+    id1:3,
     name: "High Protein Dark Chocolate",
     images: [
       "/assets/jar 1.png",
@@ -192,6 +198,29 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
     setTimeout(() => setShowPopup(false), 2500);
 
   };
+
+
+    const searchParams = useSearchParams();
+  const id1Param = searchParams.get("id1");
+
+  useEffect(() => {
+    if (id1Param) {
+      const id1Num = parseInt(id1Param, 10);
+      const foundVariant = peanutButterVariants.find(
+        (variant) => variant.id1 === id1Num
+      );
+      if (foundVariant) {
+        setSelectedVariant(foundVariant);
+        setCurrentImage(foundVariant.images[0]);
+        setSelectedSize(foundVariant.sizes[0]);
+        setQuantity(1);
+      }
+    }
+  }, [id1Param]);
+
+  if (!selectedVariant) {
+    return <p>Loading product...</p>;
+  }
 
   return (
     <div className="w-full  lg:sticky top-20 max-h-screen overflow-auto relative z-10 sm:mt-4 ">

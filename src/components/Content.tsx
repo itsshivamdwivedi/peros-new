@@ -7,6 +7,96 @@ import ExportedImage from "next-image-export-optimizer";
 import { useState } from "react";
 import Link from "next/dist/client/link";
 import Footer from "./Footer";
+
+
+
+
+  type Size = {
+  label: string;
+  price: number;
+  pricel: number;
+};
+
+type Variant = {
+  id: string;
+  name: string;
+  images: string[];
+  description: string;
+  sizes: Size[];
+  id1: number;
+  detailedDescription: string;
+  detailedDescription2: string;
+  detailedDescription3: string;
+  shelfLife: string;
+};
+
+const peanutButterVariants: Variant[] = [
+  {
+    id: "uuid-1",
+    id1: 1,
+    name: "Classic Creamy",
+    images: [
+      "/assets/jar 3.png",
+      "/assets/slider-01-min.jpg",
+      "/assets/slider-02-min.jpg",
+      "/assets/slider-03-min.jpg",
+    ],
+    description:
+      "Peros Classic Creamy Peanut Butter is crafted for those who love a smooth, rich spread without any compromise on quality.",
+    detailedDescription: "",
+    detailedDescription2: "",
+    detailedDescription3: "",
+    shelfLife: "12 Months",
+    sizes: [
+      { label: "350g", price: 157, pricel: 200 },
+      { label: "1kg", price: 475, pricel: 500 },
+    ],
+  },
+  {
+    id: "uuid-2",
+    id1: 2,
+    name: "Crunchy Honey",
+    images: [
+      "/assets/jar 2.png",
+      "/assets/slider-01-min.jpg",
+      "/assets/slider-02-min.jpg",
+      "/assets/slider-03-min.jpg",
+    ],
+    description:
+      "Chunky texture with real peanut bits and a touch of honey for natural sweetness.",
+    detailedDescription: "",
+    detailedDescription2: "",
+    detailedDescription3: "",
+    shelfLife: "12 Months",
+    sizes: [
+      { label: "350g", price: 170, pricel: 200 },
+      { label: "1kg", price: 500, pricel: 550 },
+    ],
+  },
+  {
+    id: "uuid-3",
+    id1: 3,
+    name: "High Protein Dark Chocolate",
+    images: [
+      "/assets/jar 1.png",
+      "/assets/slider-01-min.jpg",
+      "/assets/slider-02-min.jpg",
+      "/assets/slider-03-min.jpg",
+    ],
+    description:
+      "A blend of peanuts, dark cocoa, and sea salt for a rich, indulgent flavor.",
+    detailedDescription: "",
+    detailedDescription2: "",
+    detailedDescription3: "",
+    shelfLife: "12 Months",
+    sizes: [
+      { label: "350g", price: 180, pricel: 210 },
+      { label: "1kg", price: 525, pricel: 600 },
+    ],
+  },
+];
+  
+  
 const Content = () => {
   useEffect(() => {
     AOS.init({
@@ -17,21 +107,34 @@ const Content = () => {
    
 
   }, []);
+
+
+   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const product = peanutButterVariants[currentIndex];
+
+  const handleNextProduct = () => {
+    setCurrentIndex((prev) => (prev + 1) % peanutButterVariants.length);
+  };
+
   const images = [
-    "/assets/jar 1.png",
-    "/assets/jar 2.png",
     "/assets/jar 3.png",
+    
+    "/assets/jar 2.png",
+    "/assets/jar 1.png",
+    
    
   ];
   
   const flavorIcons = [
-    "/assets/icon1.png",
+      "/assets/icon3.png",
+    
     "/assets/icon2.png",
-    "/assets/icon3.png",
+    "/assets/icon1.png",
+  
   ];
-  const [currentIndex, setCurrentIndex] = useState(0);
   
-  
+
 
   return (
     <div className="flex flex-col items-center justify-center relative z-10 min-h-screen  bg-white ">
@@ -61,7 +164,7 @@ const Content = () => {
           <div className="md:w-1/2 w-full p-8 flex flex-col justify-center items-start" data-aos="slide-right">
             <h2 className="text-5xl  text-green-800">Dark Chocolate</h2>
             <h2 className="text-5xl  text-green-800">Crunchy</h2>
-            <Link href={"/products"}>
+            <Link href={`/products?id1=3`}>
             
             <button className="bg-gradient-to-r from-green-600 to-green-800 text-white py-3 px-8 my-8 font-semibold rounded-md uppercase transform hover:scale-105 transition" >
               Buy Now
@@ -82,7 +185,7 @@ const Content = () => {
           <div className="md:w-1/2 w-full p-8 flex flex-col justify-center items-start" data-aos="slide-left">
             <h2 className="text-5xl  text-green-800">Dark Chocolate</h2>
             <h2 className="text-5xl  text-green-800">Classic</h2>
-            <Link href={"/products"}>
+            <Link href={`/products?id1=1`}>
             
             <button className="bg-gradient-to-r from-green-600 to-green-800 text-white py-3 px-8 my-8 font-semibold rounded-md uppercase transform hover:scale-105 transition" >
               Buy Now
@@ -99,7 +202,7 @@ const Content = () => {
           <div className="md:w-1/2 w-full p-8 flex flex-col justify-center items-start" data-aos="slide-right" >
             <h2 className="text-5xl  text-green-800">Dark Chocolate</h2>
             <h2 className="text-5xl  text-green-800">Crunchy</h2>
-            <Link href={"/products"}>
+           <Link href={`/products?id1=2`}>
             
             <button className="bg-gradient-to-r from-green-600 to-green-800 text-white py-3 px-8 my-8 font-semibold rounded-md uppercase transform hover:scale-105 transition" >
               Buy Now
@@ -219,7 +322,7 @@ const Content = () => {
               Flavours
               
             </h3>
-            <Link href="/products">
+            <Link href={`/products?id1=${product.id1}`}  >
               <button className="bg-white text-black py-2 px-6 text-lg font-semibold rounded-full hover:bg-gray-200 transition-colors text-center">
                 Buy Now
               </button>
@@ -332,3 +435,4 @@ const Content = () => {
 };
 
 export default Content;
+
