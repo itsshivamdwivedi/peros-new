@@ -133,6 +133,11 @@ const Content = () => {
     "/assets/icon1.png",
   
   ];
+  const flavorNames = [
+    "Classic Creamy",
+    "Crunchy Honey",
+    "High Protein Dark Chocolate",
+  ];
   
 
 
@@ -317,11 +322,10 @@ const Content = () => {
             ))}
           </div>
           {/* Flavor Details / Buy Now */}
-          <div className="w-full p-8 flex flex-col items-center">
-            <h3 className="text-2xl md:text-5xl font-bold text-white mb-6 text-center">
-              Flavours
-              
-            </h3>
+           <div className="w-full p-8 flex flex-col items-center">
+  <h3 className="text-2xl md:text-5xl font-bold text-white mb-6 text-center">
+    {flavorNames[currentIndex]}
+  </h3>
             <Link href={`/products?id1=${product.id1}`}  >
               <button className="bg-white text-black py-2 px-6 text-lg font-semibold rounded-full hover:bg-gray-200 transition-colors text-center">
                 Buy Now
