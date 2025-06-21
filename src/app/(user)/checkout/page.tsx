@@ -221,7 +221,7 @@ useEffect(() => {
 }, [showPopup, paymentDetails]);
 
 
-  const [isCartOpen, setIsCartOpen] = useState(false); // For showing/hiding cart details
+  const [isCartOpen, setIsCartOpen] = useState(false); // For showing/hiding cart detailsh
 
   const checkoutRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null); // Reference for form animation
