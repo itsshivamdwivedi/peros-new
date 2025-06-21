@@ -24,5 +24,5 @@ const Pric = ({ agreed, setAgreed }) => {
     </div>
   );
 };
-
+//hello
 export default Pric;
