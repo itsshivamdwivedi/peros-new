@@ -12,6 +12,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 
 
+
 import { FaStar, FaChevronLeft, FaChevronRight, FaStarHalfAlt } from "react-icons/fa";
 
 const CustomerReviews = () => {
@@ -672,6 +673,7 @@ Switch today and snack smarter!
    
     {/* <Footer/> */}
     <Footer/>
+   
    
  
     

@@ -11,6 +11,7 @@ import Footer from "./Footer";
 
 
 
+
   type Size = {
   label: string;
   price: number;
@@ -433,6 +434,8 @@ const Content = () => {
   </div>
 </section>
 <Footer/>
+
+
 
     </div>
   );

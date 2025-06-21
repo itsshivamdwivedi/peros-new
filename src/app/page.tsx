@@ -9,6 +9,7 @@ import Loader from "../components/Loader";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 
+
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
  
@@ -34,6 +35,7 @@ export default function Home() {
       {!isLoading && (
         <div>
           <Navbar />
+          
           <Hom  />
       <Content/>
 

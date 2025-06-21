@@ -12,6 +12,7 @@ import { Timestamp } from "firebase/firestore";
 import Pric from "../../../components/pric" 
 import { doc, setDoc,   arrayUnion } from "firebase/firestore";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 
 
@@ -44,7 +45,7 @@ interface CartItem {
 
 type PaymentDetails = {
   orderId: string;
-  paymentMethod: "COD" | "Razorpay"; // specify the possible values for paymentMethod
+  paymentMethod: "COD" | "PhonePe"; // specify the possible values for paymentMethod
   razorpayPaymentId?: string; // razorpayPaymentId is optional
   address: AddressDetails;
   cart: CartItem[];
@@ -56,7 +57,7 @@ type PaymentDetails = {
 
 declare global {
   interface Window {
-    Razorpay: any;
+    PhonePe: any;
   }
 }
 
@@ -65,12 +66,13 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const router =Router
   const { user } = useAuth();
+  
   const [isRazorpayLoaded, setIsRazorpayLoaded] = useState(false);
    const [agreed, setAgreed] = useState(false);
   const [showFormPopup, setShowFormPopup] = useState(false); // Popup for form warning
   const [showPopup, setShowPopup] = useState(false); // Payment success popup
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"COD" | "Razorpay">("Razorpay"); // Added payment method
+  const [paymentMethod, setPaymentMethod] = useState<"COD" | "PhonePe">("PhonePe"); // Added payment method
   const [address, setAddress] = useState<AddressDetails>({
     firstName: "",
     lastName: "",
@@ -86,6 +88,8 @@ const Checkout = () => {
   const [showEmailError, setShowEmailError] = useState(false); // State for email error
   const [showPincodeError, setShowPincodeError] = useState(false); 
   const [showCartEmptyError, setShowCartEmptyError] = useState(false);
+
+const searchParams = useSearchParams();
 
 
   
@@ -134,6 +138,88 @@ const Checkout = () => {
 
 
   }, [user, router]);
+
+
+const hasVerified = useRef(false);
+
+useEffect(() => {
+  const verifyFromLocalStorage = async () => {
+    if (hasVerified.current) return;
+
+    const savedData = localStorage.getItem("checkoutData");
+    if (!savedData) return;
+
+    const { orderId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
+
+    if (!orderId) return;
+
+    hasVerified.current = true;
+
+    try {
+      const verifyRes = await fetch(`/api/verify-payment?orderId=${orderId}`);
+      const result = await verifyRes.json();
+
+      if (!verifyRes.ok || !result) throw new Error("Verification failed");
+
+      const { status: paymentStatus } = result;
+
+      const paymentDetails: PaymentDetails = {
+        orderId,
+        paymentMethod: "PhonePe",
+        razorpayPaymentId: orderId,
+        address,
+        cart,
+        subtotal,
+        mrpTotal,
+        userEmail,
+      };
+
+      if (paymentStatus === "SUCCESS") {
+        await storePaymentDetails(paymentDetails);
+        localStorage.removeItem("checkoutData");
+        setPaymentDetails(paymentDetails);
+        setShowPopup(true);
+      } else if (paymentStatus === "FAILED") {
+        setPaymentDetails({ status: "FAILED" });
+        setShowPopup(true);
+      } else {
+        setPaymentDetails({ status: "PENDING" });
+        setShowPopup(true);
+      }
+    } catch (error) {
+      console.error("❌ Error verifying payment:", error);
+      setPaymentDetails({ status: "FAILED" });
+      setShowPopup(true);
+    }
+  };
+
+  verifyFromLocalStorage();
+}, []);
+
+
+
+useEffect(() => {
+  if (showPopup && paymentDetails?.status !== "FAILED" && paymentDetails?.status !== "PENDING") {
+    const createShipment = async () => {
+      try {
+        await fetch("/api/create-shipment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            address: paymentDetails.address,
+            cart: paymentDetails.cart,
+            orderId: paymentDetails.orderId,
+          }),
+        });
+      } catch (error) {
+        console.error("❌ Error creating shipment:", error);
+      }
+    };
+
+    createShipment();
+  }
+}, [showPopup, paymentDetails]);
+
 
   const [isCartOpen, setIsCartOpen] = useState(false); // For showing/hiding cart details
 
@@ -192,7 +278,7 @@ const Checkout = () => {
     return `ORD-${timestamp}-${randomStr}`;
   };
 
-  const storePaymentDetails = async (paymentDetails: PaymentDetails) => {
+   const storePaymentDetails = async (paymentDetails: PaymentDetails) => {
     if (
       !paymentDetails.orderId ||
       !paymentDetails.paymentMethod ||
@@ -204,159 +290,138 @@ const Checkout = () => {
       console.error("Incomplete payment details:", paymentDetails);
       return;
     }
-  
+
     try {
-      
       const userRef = doc(db, `users/${user.uid}`);
-  
-      // Log the data you're going to save for debugging purposes
-      console.log("Saving payment details:", paymentDetails);
-  
-      // Store payment details directly in the user's document, appending to the `orders` array
+
       await setDoc(
         userRef,
         {
           orders: arrayUnion({
-            ...paymentDetails, // Save the entire payment details in the `orders` array
-            createdAt: Timestamp.now(), // Use Firestore Timestamp
+            ...paymentDetails,
+            createdAt: Timestamp.now(),
           }),
-          cart: [], // Optionally clear the cart after the order is completed
+          cart: [],
         },
-        { merge: true } // Use merge to prevent overwriting the entire document
+        { merge: true }
       );
-  
-      console.log("Payment and cart details saved in the user's document");
-  
-      // Update the state with payment details
+
       setPaymentDetails(paymentDetails);
-  
-      // Show the success popup
       setShowPopup(true);
     } catch (error) {
-      console.error("Error storing payment details: ", error);
+      console.error("Error storing payment details:", error);
     }
   };
-  const handlePayment = async () => {
-    if (cart.length === 0) {
-      setShowCartEmptyError(true); // Show the cart empty error popup
-      return;
-    }
-  
-    if (
-      !address.firstName ||
-      !address.lastName ||
-      !address.phone ||
-      !address.email ||
-      !address.address ||
-      !address.state ||
-      !address.pincode
-    ) {
-      setShowFormPopup(true);
-      return;
-    }
-  
-    if (!validateName(address.firstName) || !validateName(address.lastName)) {
-      setShowNameError(true); // Show name error popup
-      return;
-    }
-  
-    if (!validatePhone(address.phone)) {
-      setShowPhoneError(true); // Show phone error popup
-      return;
-    }
-  
-    if (!validateEmail(address.email)) {
-      setShowEmailError(true); // Show email error popup
-      return;
-    }
-  
-    if (!validatePincode(address.pincode)) {
-      setShowPincodeError(true); // Show pincode error popup
-      return;
-    }
-  
-    setIsProcessing(true);
-  
-    try {
-      const orderId = generateOrderId();
-  
-      // 👉 Create shipment
-      await fetch("/api/create-shipment", {
+
+const handlePayment = async () => {
+  if (cart.length === 0) {
+    setShowCartEmptyError(true);
+    return;
+  }
+
+  if (
+    !address.firstName ||
+    !address.lastName ||
+    !address.phone ||
+    !address.email ||
+    !address.address ||
+    !address.state ||
+    !address.pincode
+  ) {
+    setShowFormPopup(true);
+    return;
+  }
+
+  if (!validateName(address.firstName) || !validateName(address.lastName)) {
+    setShowNameError(true);
+    return;
+  }
+
+  if (!validatePhone(address.phone)) {
+    setShowPhoneError(true);
+    return;
+  }
+
+  if (!validateEmail(address.email)) {
+    setShowEmailError(true);
+    return;
+  }
+
+  if (!validatePincode(address.pincode)) {
+    setShowPincodeError(true);
+    return;
+  }
+
+  setIsProcessing(true);
+
+  try {
+    const orderId = generateOrderId(); // Single generation for both methods
+
+    if (paymentMethod === "PhonePe") {
+            // const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/payment/phonepe/callback?orderId=${orderId}`;
+const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/checkout?status=success&orderId=${orderId}`;
+
+
+      const res = await fetch("/api/create-order", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          address,
-          cart,
-          orderId,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: subtotal, orderId, redirectUrl }),
       });
-  
-      if (paymentMethod === "Razorpay") {
-        const response = await fetch("/api/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: subtotal, orderId }),
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to create Razorpay order");
-        }
-  
-        const data = await response.json();
-  
-        const options = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-          amount: subtotal * 100,
-          currency: "INR",
-          name: "Peros",
-          description: "Test Transaction",
-          order_id: data.orderId,
-          handler: (response: any) => {
-            const paymentDetails: PaymentDetails = {
-              orderId,
-              paymentMethod: "Razorpay",
-              razorpayPaymentId: response.razorpay_payment_id,
-              address,
-              cart,
-              subtotal,
-              mrpTotal,
-              userEmail: user.email,
-            };
-  
-            storePaymentDetails(paymentDetails);
-          },
-          prefill: {
-            name: `${address.firstName} ${address.lastName}`,
-            email: address.email,
-            contact: address.phone,
-          },
-          theme: { color: "#3399cc" },
-        };
-  
-        const rzp1 = new window.Razorpay(options);
-        rzp1.open();
-      } else {
-        const paymentDetails: PaymentDetails = {
+
+      if (!res.ok) {
+        throw new Error("Failed to create PhonePe order");
+      }
+
+      const data = await res.json();
+      const phonepeRedirect = data?.data?.instrumentResponse?.redirectInfo?.url;
+
+      if (!phonepeRedirect) {
+        throw new Error("Missing PhonePe redirect URL");
+      }
+
+      // Save data temporarily for callback
+      localStorage.setItem(
+        "checkoutData",
+        JSON.stringify({
           orderId,
-          paymentMethod: "COD",
-          razorpayPaymentId: orderId, // Placeholder for COD
           address,
           cart,
           subtotal,
           mrpTotal,
           userEmail: user.email,
-        };
-  
-        storePaymentDetails(paymentDetails);
-      }
-    } catch (error) {
-      console.error("Payment failed:", error);
-    } finally {
-      setIsProcessing(false);
+        })
+      );
+
+      window.location.href = phonepeRedirect;
+    } else {
+      // COD fallback: proceed immediately
+      const paymentDetails: PaymentDetails = {
+        orderId,
+        paymentMethod: "COD",
+        razorpayPaymentId: orderId,
+        address,
+        cart,
+        subtotal,
+        mrpTotal,
+        userEmail: user.email,
+      };
+
+      // Create shipment
+      await fetch("/api/create-shipment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address, cart, orderId }),
+      });
+
+      storePaymentDetails(paymentDetails);
     }
-  };
+  } catch (error) {
+    console.error("Payment failed:", error);
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
   
   
   return (
@@ -416,11 +481,11 @@ const Checkout = () => {
               type="radio"
               name="paymentMethod"
               value="Razorpay"
-              checked={paymentMethod === "Razorpay"}
-              onChange={() => setPaymentMethod("Razorpay")}
+              checked={paymentMethod === "PhonePe"}
+              onChange={() => setPaymentMethod("PhonePe")}
               className="mr-2"
             />
-            Razorpay
+            PhonePe
           </label>
           <label className="flex items-center mt-4">
             <input
@@ -469,6 +534,7 @@ const Checkout = () => {
                 </div>
               )}
             </div>
+            
           
           </div>
           
@@ -590,7 +656,7 @@ const Checkout = () => {
 
 
 {showPincodeError && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+ <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg w-80 text-center">
             <h2 className="text-xl font-semibold font-serif text-red-500 mb-4">
               Invalid Pincode
@@ -599,8 +665,10 @@ const Checkout = () => {
               Please enter a valid 6-digit pincode.
             </p>
             <button
-              onClick={() => setShowPincodeError(false)} // Close the error popup
-              className="mt-4 px-6 py-2 bg-red-500 text-white rounded-md font-semibold"
+               onClick={() => {
+              setPaymentDetails(null);
+              setShowPopup(false);
+            }}
             >
               Close
             </button>
@@ -608,69 +676,104 @@ const Checkout = () => {
         </div>
       )}
 
+      {showPopup && (
+  <div className="popup">
+  {paymentDetails?.status === "FAILED" && (
+  <div className="fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-6 rounded-md shadow-lg text-center relative">
+      <div className="text-lg font-semibold mb-2">❌ Payment Failed</div>
+       <Link href="/checkout">
+        <button
+          className="bg-green-500 hover:bg-orange-400 text-white px-4 py-2 rounded-md mt-4"
+          onClick={() => {
+              setPaymentDetails(null);
+              setShowPopup(false);
+            }}
+        >
+          Close
+        </button>
+      </Link>
+    </div>
+  </div>
+)}
+
+{paymentDetails?.status === "PENDING" && (
+  <div className="fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-6 rounded-md shadow-lg text-center relative">
+      <div className="text-lg font-semibold mb-2">⏳ Payment is Processing...</div>
+      <Link href="/checkout">
+        <button
+          className="bg-green-500 hover:bg-orange-400 text-white px-4 py-2 rounded-md mt-4"
+          onClick={() => {
+           
+            setShowPopup(false);
+          }}
+        >
+          Close
+        </button>
+      </Link>
+    </div>
+  </div>
+)}
+
+    {!paymentDetails?.status && (
+      <div className=" fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50">
+    <div className="bg-white p-6 rounded-md shadow-lg">
+      <h2 className="text-xl font-semibold mb-4 font-serif">Order Confirmed!</h2>
+
+      <p><strong>Order ID:</strong> {paymentDetails.orderId}</p>
+      <p><strong>Payment Method:</strong> {paymentDetails.paymentMethod}</p>
+      <p><strong>Payment ID:</strong> {paymentDetails.razorpayPaymentId}</p>
+
+      <p><strong>Shipping Address:</strong><br />
+        {`${paymentDetails.address.firstName} ${paymentDetails.address.lastName}`}<br />
+        {paymentDetails.address.address}<br />
+        {paymentDetails.address.state}, {paymentDetails.address.pincode}<br />
+        <strong>Email:</strong> {paymentDetails.address.email}<br />
+        <strong>Phone:</strong> {paymentDetails.address.phone}
+      </p>
+
+      <h3 className="mt-4 font-semibold">Cart Summary:</h3>
+      {paymentDetails.cart.map((item: CartItem) => (
+        <div key={item.id} className="flex justify-between">
+          <span>{item.name} x {item.quantity}</span>
+          <span>₹{item.price * item.quantity}</span>
+        </div>
+      ))}
+
+      <div className="flex justify-between font-bold mt-4">
+        <span>Subtotal</span>
+        <span>₹{paymentDetails.subtotal}</span>
+      </div>
+
+      <div className="flex justify-between font-bold mt-4">
+        <span>Savings</span>
+        <span>₹{paymentDetails.mrpTotal - paymentDetails.subtotal}</span>
+      </div>
+
+      <Link href="/account">
+        <button
+          className="bg-green-500 hover:bg-orange-400 text-white px-4 py-2 rounded-md mt-4"
+          onClick={() => {
+            paymentDetails.cart.forEach((item: CartItem) => removeFromCart(item.id));
+            setShowPopup(false);
+          }}
+        >
+          Close
+        </button>
+      </Link>
+    </div>
+  </div>
+    )}
+  </div>
+)}
+
+
 
       {/* Order Confirmation Popup */}
-      {showPopup && paymentDetails && (
-        <div className="fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-md shadow-lg">
-            <h2 className="text-xl font-semibold mb-4 font-serif">Order Confirmed!</h2>
-            <p>
-              <strong>Order ID:</strong> {paymentDetails.orderId}
-            </p>
-            <p>
-              <strong>Payment Method:</strong> {paymentDetails.paymentMethod}
-              
-            </p>
-            <p>
-             
-              <strong>Payment_ID</strong> {paymentDetails.razorpayPaymentId}
-            </p>
-            <p>
-              <strong>Shipping Address:</strong>
-              <br />
-              {`${address.firstName} ${address.lastName}`}
-              <br />
-              {address.address}
-              <br />
-              {address.state}, {address.pincode}
-              <br />
-              <strong>Email:</strong> {address.email}
-              <br />
-              <strong>Phone:</strong> {address.phone}
-            </p>
-            <h3 className="mt-4 font-semibold">Cart Summary:</h3>
-            {cart.map((item :CartItem) => (
-              <div key={item.id} className="flex justify-between">
-                <span>
-                  {item.name} x {item.quantity}
-                </span>
-                <span>₹{item.price * item.quantity}</span>
-              </div>
-            ))}
-            <div className="flex justify-between font-bold mt-4">
-              <span>Subtotal</span>
-              <span>₹{subtotal}</span>
-            </div>
-            <div className="flex justify-between font-bold mt-4">
-              <span>Savings</span>
-              <span>₹{mrpTotal-subtotal}</span>
-            </div>
-           
-            
-        <Link href ="/account"> <button
-              className="bg-green-500 hover:bg-orange-400 text-white px-4 py-2 rounded-md mt-4"
-              onClick={() => {
-                
-                cart.forEach((item: CartItem) => removeFromCart(item.id)); 
-                setShowPopup(false);
-              }}
-            >
-              Close
-            </button> </Link>
-          </div>
-        </div>
-      )}
       
+
+
     </div>
   );
 };

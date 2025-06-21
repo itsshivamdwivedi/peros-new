@@ -6,6 +6,7 @@ import Products from "./Products";
 import Hom from "@/components/Hom"
 import { Suspense } from "react";
 
+
 export const dynamic = "force-dynamic";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           
     <CartProvider>
      <Suspense fallback={<p>Loading...</p>}>
+     
       <Products />
     </Suspense>
       

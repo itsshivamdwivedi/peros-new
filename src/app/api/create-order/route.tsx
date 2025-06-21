@@ -1,33 +1,76 @@
+// File: /app/api/create-order/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
+import crypto from "crypto";
 
-const keyId = process.env.RAZORPAY_KEY_ID;
-const keySecret = process.env.RAZORPAY_SECRET_KEY;
+// ✅ Required Environment Variables
+const {
+  PHONEPE_SALT_KEY,
+  PHONEPE_SALT_INDEX,
+  PHONEPE_MERCHANT_ID,
+  NEXT_PUBLIC_BASE_URL,
+} = process.env;
 
-// Ensure that the environment variables are defined
-if (!keyId || !keySecret) {
-  throw new Error("RAZORPAY_KEY_ID and RAZORPAY_SECRET_KEY must be defined in environment variables");
-} 
+const PHONEPE_API_BASE_URL = "https://api-preprod.phonepe.com/apis/pg-sandbox";
+const API_ENDPOINT_PATH = "/pg/v1/pay";
 
-
-const razorpay = new Razorpay({
-  key_id: keyId,
-  key_secret: keySecret,
-});
-
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { amount } = await request.json();
+    const body = await req.json();
+    const { amount, orderId, redirectUrl } = body;
 
-    const order = await razorpay.orders.create({
-      amount: amount * 100, // Convert to smallest currency unit
-      currency: "INR",
-      receipt: "receipt_" + Math.random().toString(36).substring(7),
+    if (!amount || !orderId || !redirectUrl) {
+      return NextResponse.json(
+        { error: "Missing required fields", fields: { amount, orderId, redirectUrl } },
+        { status: 400 }
+      );
+    }
+
+    const payload = {
+      merchantId: PHONEPE_MERCHANT_ID,
+      merchantTransactionId: orderId,
+      merchantUserId: "user-123",
+      amount: amount * 100, // ₹ to paise
+      redirectUrl,
+      redirectMode: "REDIRECT",
+      callbackUrl: `${NEXT_PUBLIC_BASE_URL}/api/payment-callback`,
+      paymentInstrument: {
+        type: "PAY_PAGE",
+      },
+      mobileNumber: "9999999999",
+    };
+
+    const payloadStr = JSON.stringify(payload);
+    const base64Payload = Buffer.from(payloadStr).toString("base64");
+
+    const signatureRaw = `${base64Payload}${API_ENDPOINT_PATH}${PHONEPE_SALT_KEY}`;
+    const hash = crypto.createHash("sha256").update(signatureRaw).digest("hex");
+    const xVerify = `${hash}###${PHONEPE_SALT_INDEX}`;
+
+    const phonepeRes = await fetch(`${PHONEPE_API_BASE_URL}${API_ENDPOINT_PATH}`, {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "Content-Type": "application/json",
+        "X-VERIFY": xVerify,
+        "X-MERCHANT-ID": PHONEPE_MERCHANT_ID!,
+      },
+      body: JSON.stringify({ request: base64Payload }),
     });
 
-    return NextResponse.json({ orderId: order.id }, { status: 200 });
-  } catch (error) {
-    console.error("Error creating order:", error);
-    return NextResponse.json({ error: "Error creating order" }, { status: 500 });
+    const responseText = await phonepeRes.text();
+
+    if (!phonepeRes.ok) {
+      console.error("❌ PhonePe API Error:", responseText);
+      return NextResponse.json(
+        { error: "PhonePe request failed", details: JSON.parse(responseText) },
+        { status: phonepeRes.status }
+      );
+    }
+
+    const result = JSON.parse(responseText);
+    return NextResponse.json(result);
+  } catch (err: any) {
+    console.error("❌ Internal Server Error:", err.message || err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
