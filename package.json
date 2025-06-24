@@ -25,6 +25,7 @@
     "@vctrl/hooks": "^0.7.8",
     "algoliasearch": "^5.20.0",
     "aos": "^2.3.4",
+    "axios": "^1.10.0",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.7",
     "class-variance-authority": "^0.7.1",
