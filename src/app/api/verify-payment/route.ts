@@ -1,53 +1,94 @@
-// File: app/api/verify-payment/route.ts
+import axios from 'axios';
+import { NextRequest, NextResponse } from 'next/server';
 
-import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
-
-const {
-  PHONEPE_MERCHANT_ID,
-  PHONEPE_SALT_KEY,
-  PHONEPE_SALT_INDEX,
-} = process.env;
-
-if (!PHONEPE_MERCHANT_ID || !PHONEPE_SALT_KEY || !PHONEPE_SALT_INDEX) {
-  throw new Error("Missing PhonePe environment variables");
+interface TokenResponse {
+  access_token: string;
 }
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const orderId = searchParams.get("orderId");
+  const {
+    CLIENT_ID,
+    CLIENT_SECRET,
+    CLIENT_VERSION,
+    ENV_URL
+  } = process.env;
 
-  if (!orderId) {
-    return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
+  const { searchParams } = new URL(req.url);
+  const transactionId = searchParams.get('transactionId');
+
+  if (!transactionId) {
+    console.error('❌ Missing transactionId in request');
+    return NextResponse.json({ error: 'Missing transactionId' }, { status: 400 });
   }
 
-  const path = `/pg/v1/status/${PHONEPE_MERCHANT_ID}/${orderId}`;
-  const signature = crypto
-    .createHash("sha256")
-    .update(path + PHONEPE_SALT_KEY)
-    .digest("hex");
+  if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !ENV_URL) {
+    console.error('❌ Missing required environment variables');
+    return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
+  }
 
-  const xVerify = `${signature}###${PHONEPE_SALT_INDEX}`;
+  console.log('🔍 Verifying transactionId:', transactionId);
+  console.log('🔧 ENV Config:', {
+    CLIENT_ID,
+    CLIENT_VERSION,
+    ENV_URL,
+  });
 
   try {
-    const response = await fetch(`https://api-preprod.phonepe.com/apis/pg-sandbox${path}`, {
-      method: "GET",
+    // Step 1: Get access token
+    const formData = new URLSearchParams();
+    formData.append('grant_type', 'client_credentials');
+    formData.append('client_id', CLIENT_ID);
+    formData.append('client_secret', CLIENT_SECRET);
+    formData.append('client_version', CLIENT_VERSION);
+
+    const tokenResponse = await axios.post<TokenResponse>(
+      `${ENV_URL}/v1/oauth/token`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
+
+    const { access_token } = tokenResponse.data;
+    console.log('✅ Access Token acquired successfully');
+
+    // Step 2: Get payment status
+    const statusUrl = `${ENV_URL}/checkout/v2/order/${transactionId}/status`;
+
+    const verifyRes = await axios.get(statusUrl, {
       headers: {
-        "Content-Type": "application/json",
-        "X-MERCHANT-ID": PHONEPE_MERCHANT_ID || "",
-        "X-VERIFY": xVerify,
-      } as Record<string, string>, // 👈 This cast resolves the TS error
+        Authorization: `O-Bearer ${access_token}`,
+        'Content-Type': 'application/json',
+      },
     });
 
-    const json = await response.json();
-    const responseCode = json?.data?.responseCode;
-    const status = responseCode === "SUCCESS" ? "SUCCESS" : "FAILED";
+    const responseData = verifyRes.data;
+    console.log('📦 Raw verification response:', JSON.stringify(responseData, null, 2));
 
-    console.log("PhonePe verify status:", responseCode, json);
+    const paymentState = responseData?.state;
+    const status = paymentState || 'UNKNOWN';
 
-    return NextResponse.json({ status, data: json?.data });
-  } catch (error) {
-    console.error("Error verifying payment:", error);
-    return NextResponse.json({ error: "Verification failed" }, { status: 500 });
+    if (!paymentState) {
+      console.warn('⚠️ No state returned for transaction. Marking as UNKNOWN.');
+    }
+
+    console.log('✅ Extracted payment status:', status);
+
+    return NextResponse.json({
+      status,
+      data: responseData,
+    });
+
+  } catch (error: any) {
+    console.error('❌ Verification failed:', error?.response?.data || error?.message);
+    return NextResponse.json(
+      {
+        error: 'Verification failed',
+        details: error?.response?.data || error?.message,
+      },
+      { status: 500 }
+    );
   }
 }
