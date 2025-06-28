@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, collectionGroup, deleteDoc, getDoc } from "firebase/firestore";
+
 
 interface Order {
   orderId: string;
@@ -14,6 +15,14 @@ interface Order {
   // other order fields...
 }
 
+
+interface Review {
+  rating: number;
+  comment: string;
+  userId: string;
+  timestamp?: any;
+}
+
 interface UserData {
   email: string;
   orders: Order[];
@@ -21,8 +30,9 @@ interface UserData {
 
 const AdminOrders = () => {
   const [ordersByUser, setOrdersByUser] = useState<any>({}); // Grouped orders by userId
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+ // Error state
+const [loadingOrders, setLoadingOrders] = useState(true);
+const [loadingReviews, setLoadingReviews] = useState(true);
 
   useEffect(() => {
     fetchAllOrders();
@@ -49,6 +59,53 @@ const AdminOrders = () => {
       setError("Error fetching orders.");
     } finally {
       setLoading(false);
+    }
+  };
+
+
+
+
+    const [reviewsByProduct, setReviewsByProduct] = useState<Record<string, { id: string; data: Review }[]>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAllReviews();
+  }, []);
+
+  const fetchAllReviews = async () => {
+    try {
+      setLoading(true);
+      const reviewSnapshots = await getDocs(collectionGroup(db, "reviews"));
+      const reviewsMap: Record<string, { id: string; data: Review }[]> = {};
+
+      reviewSnapshots.forEach((docSnap) => {
+        const pathSegments = docSnap.ref.path.split("/");
+        const productId = pathSegments[1]; // products/{productId}/reviews/{reviewId}
+
+        if (!reviewsMap[productId]) {
+          reviewsMap[productId] = [];
+        }
+
+        reviewsMap[productId].push({ id: docSnap.id, data: docSnap.data() as Review });
+      });
+
+      setReviewsByProduct(reviewsMap);
+    } catch (err: any) {
+      console.error("Error fetching reviews:", err);
+      setError("Failed to load reviews.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteReview = async (productId: string, reviewId: string) => {
+    try {
+      await deleteDoc(doc(db, "products", productId, "reviews", reviewId));
+      fetchAllReviews(); // Refresh UI
+    } catch (err) {
+      console.error("Error deleting review:", err);
+      setError("Failed to delete review.");
     }
   };
 
@@ -275,8 +332,158 @@ const AdminOrders = () => {
           )}
         </div>
       )}
+       <div className="max-w-5xl mx-auto py-8 px-4">
+      <h2 className="text-2xl font-bold mb-6 font-serif text-gray-800">All Product Reviews</h2>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {loading ? (
+        <p>Loading reviews...</p>
+      ) : Object.keys(reviewsByProduct).length === 0 ? (
+        <p>No reviews found.</p>
+      ) : (
+        Object.entries(reviewsByProduct).map(([productId, reviews]) => (
+          <div key={productId} className="mb-8 border border-gray-200 rounded-lg shadow-sm p-6 bg-white">
+            <h3 className="text-xl font-semibold mb-4 font-serif text-gray-700">
+              Product ID: <span className="font-mono">{productId}</span>
+            </h3>
+            {reviews.map((review) => (
+              <div
+                key={review.id}
+                className="border-b border-gray-100 py-3 flex justify-between items-start gap-4"
+              >
+                <div>
+                  <p className="text-gray-800">
+                    <strong>User ID:</strong> {review.data.userId}
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>Rating:</strong> {review.data.rating} ⭐
+                  </p>
+                  <p className="text-gray-600">
+                    <strong>Comment:</strong> {review.data.comment}
+                  </p>
+                </div>
+                <button
+                  onClick={() => deleteReview(productId, review.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+    </div>
     </div>
   );
 };
 
 export default AdminOrders;
+// "use client";
+
+// import { useEffect, useState } from "react";
+// import { db } from "@/lib/firebase";
+// import {
+//   collectionGroup,
+//   getDocs,
+//   deleteDoc,
+//   doc,
+// } from "firebase/firestore";
+
+// interface Review {
+//   rating: number;
+//   comment: string;
+//   userId: string;
+//   timestamp?: any;
+// }
+
+// const AdminReviews = () => {
+//   const [reviewsByProduct, setReviewsByProduct] = useState<Record<string, { id: string; data: Review }[]>>({});
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     fetchAllReviews();
+//   }, []);
+
+//   const fetchAllReviews = async () => {
+//     try {
+//       setLoading(true);
+//       const reviewSnapshots = await getDocs(collectionGroup(db, "reviews"));
+//       const reviewsMap: Record<string, { id: string; data: Review }[]> = {};
+
+//       reviewSnapshots.forEach((docSnap) => {
+//         const pathSegments = docSnap.ref.path.split("/");
+//         const productId = pathSegments[1]; // products/{productId}/reviews/{reviewId}
+
+//         if (!reviewsMap[productId]) {
+//           reviewsMap[productId] = [];
+//         }
+
+//         reviewsMap[productId].push({ id: docSnap.id, data: docSnap.data() as Review });
+//       });
+
+//       setReviewsByProduct(reviewsMap);
+//     } catch (err: any) {
+//       console.error("Error fetching reviews:", err);
+//       setError("Failed to load reviews.");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const deleteReview = async (productId: string, reviewId: string) => {
+//     try {
+//       await deleteDoc(doc(db, "products", productId, "reviews", reviewId));
+//       fetchAllReviews(); // Refresh UI
+//     } catch (err) {
+//       console.error("Error deleting review:", err);
+//       setError("Failed to delete review.");
+//     }
+//   };
+
+//   return (
+//     <div className="max-w-5xl mx-auto py-8 px-4">
+//       <h2 className="text-2xl font-bold mb-6 font-serif text-gray-800">All Product Reviews</h2>
+//       {error && <p className="text-red-500 mb-4">{error}</p>}
+//       {loading ? (
+//         <p>Loading reviews...</p>
+//       ) : Object.keys(reviewsByProduct).length === 0 ? (
+//         <p>No reviews found.</p>
+//       ) : (
+//         Object.entries(reviewsByProduct).map(([productId, reviews]) => (
+//           <div key={productId} className="mb-8 border border-gray-200 rounded-lg shadow-sm p-6 bg-white">
+//             <h3 className="text-xl font-semibold mb-4 font-serif text-gray-700">
+//               Product ID: <span className="font-mono">{productId}</span>
+//             </h3>
+//             {reviews.map((review) => (
+//               <div
+//                 key={review.id}
+//                 className="border-b border-gray-100 py-3 flex justify-between items-start gap-4"
+//               >
+//                 <div>
+//                   <p className="text-gray-800">
+//                     <strong>User ID:</strong> {review.data.userId}
+//                   </p>
+//                   <p className="text-gray-600">
+//                     <strong>Rating:</strong> {review.data.rating} ⭐
+//                   </p>
+//                   <p className="text-gray-600">
+//                     <strong>Comment:</strong> {review.data.comment}
+//                   </p>
+//                 </div>
+//                 <button
+//                   onClick={() => deleteReview(productId, review.id)}
+//                   className="bg-red-500 hover:bg-red-600 text-white text-sm px-3 py-1 rounded"
+//                 >
+//                   Delete
+//                 </button>
+//               </div>
+//             ))}
+//           </div>
+//         ))
+//       )}
+//     </div>
+//   );
+// };
+
+// export default AdminReviews;

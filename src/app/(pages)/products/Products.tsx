@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React, {  useRef, useState } from "react";
 import { useCart } from "@/contexts/CartContext"; 
 import gsap from "gsap";
 import Link from "next/link";
@@ -10,10 +10,36 @@ import { v4 as uuidv4 } from "uuid";
 import Footer from "@/components/Footer";
 import { useRouter, useSearchParams } from "next/navigation"; 
 
+
 //hello1
 
 
 import { FaStar, FaChevronLeft, FaChevronRight, FaStarHalfAlt } from "react-icons/fa";
+import { useEffect} from "react";
+import { useParams } from "next/navigation";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  Timestamp,
+} from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+
+interface Review {
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  timestamp: Timestamp;
+  imageURLs?: string[]; // optional field for image links
+}
+
+
 
 const CustomerReviews = () => {
 
@@ -134,6 +160,9 @@ const Products: React.FC = () => {
   const [selectedVariant, setSelectedVariant] = useState<Variant>(
     peanutButterVariants[0]
   );
+
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+
   const [currentImage, setCurrentImage] = useState<string>(
     selectedVariant.images[0]
   );
@@ -141,10 +170,129 @@ const Products: React.FC = () => {
     selectedVariant.sizes[0]
   );
   const [showPopup, setShowPopup] = useState(false);
+  const params = useParams();
+    const rawSlug = params?.slug;
+    const productId = typeof rawSlug === "string" ? rawSlug : rawSlug?.[0] || "default";
+  
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [rating, setRating] = useState<number>(5);
+    const [comment, setComment] = useState("");
+    const [user, setUser] = useState<any>(null);
+    const [hasReviewed, setHasReviewed] = useState(false);
+    const [averageRating, setAverageRating] = useState<number>(0);
+    const [showAllReviews, setShowAllReviews] = useState(false);
+
+const [reviewCount, setReviewCount] = useState<number>(0);
+
+const storage = getStorage();
+
 
   
+    useEffect(() => {
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        setUser(firebaseUser);
+      });
+      return () => unsubscribe();
+    }, []);
   
- 
+    useEffect(() => {
+      if (productId) {
+        fetchReviews();
+      }
+    }, [productId, user]);
+    const fetchReviews = async () => {
+  try {
+    const reviewRef = collection(db, "products", productId, "reviews");
+    const reviewSnap = await getDocs(reviewRef);
+    const fetched: Review[] = [];
+
+    let total = 0;
+
+    reviewSnap.forEach((doc) => {
+      const data = doc.data() as Review;
+      fetched.push(data);
+      total += data.rating;
+      if (user && data.userId === user.uid) {
+        setHasReviewed(true);
+      }
+    });
+
+    setReviews(fetched);
+    setReviewCount(fetched.length);
+    setAverageRating(fetched.length > 0 ? total / fetched.length : 0);
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+  }
+};
+
+  
+    // const fetchReviews = async () => {
+    //   try {
+    //     const reviewRef = collection(db, "products", productId, "reviews");
+    //     const reviewSnap = await getDocs(reviewRef);
+    //     const fetched: Review[] = [];
+  
+    //     reviewSnap.forEach((doc) => {
+    //       const data = doc.data() as Review;
+    //       fetched.push(data);
+    //       if (user && data.userId === user.uid) {
+    //         setHasReviewed(true);
+    //       }
+    //     });
+  
+    //     setReviews(fetched);
+    //   } catch (error) {
+    //     console.error("Error fetching reviews:", error);
+    //   }
+    // };
+  
+// Review Submit Handler
+
+
+const [thankYouPopup, setThankYouPopup] = useState(false);
+const handleSubmit = async () => {
+  if (!user || hasReviewed || comment.trim() === "") return;
+
+  try {
+    const imageURLs: string[] = [];
+
+    for (const image of selectedImages) {
+      const imageRef = ref(storage, `reviews/${productId}/${user.uid}/${image.name}`);
+      const snapshot = await uploadBytes(imageRef, image);
+      const url = await getDownloadURL(snapshot.ref);
+      imageURLs.push(url);
+    }
+
+    const reviewData: Review = {
+      userId: user.uid,
+      userName: user.displayName || user.email || "Anonymous",
+      rating: Math.max(1, Math.min(5, rating)),
+      comment,
+      timestamp: Timestamp.now(),
+      imageURLs,
+    };
+
+    const reviewRef = collection(db, "products", productId, "reviews");
+    await addDoc(reviewRef, reviewData);
+
+    // Reset form
+    setComment("");
+    setRating(5);
+    setSelectedImages([]);
+    setHasReviewed(true);
+    setShowPopup(false);
+
+    // Show thank you modal
+    setThankYouPopup(true);
+
+    await fetchReviews(); // Refresh UI
+
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    alert("Something went wrong. Please try again.");
+  }
+};
+
 
   const { addToCart } = useCart(); 
 
@@ -266,12 +414,18 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
         <div className="w-full lg:w-1/2 xl:mt-16 mt-10 "  >
           <h1 className="text-3xl font-semibold mb-1 font-sans">{selectedVariant.name}</h1>
           {/* <p className="text-lg text-gray-500 mb-4 ">{selectedVariant.description}</p> */}
-          <h2 className="text-sm font-semibold flex text-yellow-200 mb-5">
-          {[...Array(5)].map((_, index) => (
-        <FaStar key={index} />
-      ))} <span className="text-gray-300 text-sm px-2">(213 Reviews)</span>
-          </h2>
-          <h2 className="text-3xl font-semibold">
+         <h2 className="text-sm font-semibold flex text-yellow-200 mb-5 items-center">
+  {[...Array(5)].map((_, index) => (
+    <FaStar
+      key={index}
+      className={index < Math.round(averageRating) ? "text-yellow-400" : "text-gray-300"}
+    />
+  ))}
+  <span className="text-gray-300 text-sm px-2">
+    ({reviewCount} Review{reviewCount !== 1 ? "s" : ""})
+  </span>
+</h2>
+<h2 className="text-3xl font-semibold">
             ₹{selectedSize.price} <span className="text-red-500 font-medium text-sm">-10%</span>
           </h2>
           <div className="flex flex-col items-start gap-1 ">
@@ -538,58 +692,205 @@ Switch today and snack smarter!
     </div>
 
 
-    <div>
 
-      
+  {/* Add Review Button */}
+<div className="my-6 flex justify-center">
+  {user && !hasReviewed ? (
+    <button
+      onClick={() => setShowPopup(true)}
+      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-orange-400"
+    >
+      Add a Review
+    </button>
+  ) : user && hasReviewed ? (
+    <p className="text-green-600">You’ve already reviewed this product.</p>
+  ) : (
+    <p className="text-red-600">Please log in to write a review.</p>
+  )}
+</div>
 
-  <div className="bg-white  sm:w-full sm:py-10">
-  <div className="max-w-md mx-auto p-6 text-center bg-white shadow-lg sm:shadow-none rounded-2xl  sm:w-[90vw] ">
-      <h2 className="text-5xl px-8 font-bold">Customer Reviews</h2>
-      <div className="flex justify-center items-center my-2">
-        {[...Array(5)].map((_, i) => (
-          <FaStar
-            key={i}
-            className={`text-yellow-500 ${i < Math.round(averageRating) ? "" : "opacity-30"}`}
-          />
-        ))}<span className="font-normal ml-1"> {averageRating}  out of 5 </span>
-        
-      </div>
-      <span className="font-normal">  Based on {totalReviews} reviews</span>
-     
-       
-     
-      <div className="my-4 px-16">
-        {ratingDistribution.map((rating, index) => (
-          <div key={index} className="flex items-center mb-1">
-            <div className="text-yellow-500 flex">
-              {[...Array(5)].map((_, i) => (
-                <FaStar key={i} className={i < rating.stars ? "" : "opacity-30"} />
-              ))}
-            </div>
-            <div className="w-full bg-gray-200 h-2 ml-2 ">
-              <div
-                className="bg-yellow-500 h-2 "
-                style={{ width: `${(rating.count / totalReviews) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between mt-4">
-        <button className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700">
-          <FaChevronLeft />
-        </button>
-        <button className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700">
-          <FaChevronRight />
-        </button>
-      </div>
+{/* Review Modal */}
+{showPopup && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center px-5 z-50">
+    <div className="bg-white p-6 rounded-lg max-w-lg w-full relative">
+      <button
+        onClick={() => setShowPopup(false)}
+        className="absolute top-2 right-3 text-xl text-gray-500 hover:text-black"
+      >
+        &times;
+      </button>
+
+      <h3 className="text-lg font-bold mb-4">Write a Review</h3>
+
+      {/* Star Rating */}
+      <label className="block mb-4">
+        <span className="text-sm block mb-1">Rating:</span>
+        <div className="flex gap-1 text-yellow-400 text-2xl cursor-pointer">
+          {[1, 2, 3, 4, 5].map((num) => (
+            <span
+              key={num}
+              onClick={() => setRating(num)}
+              className={num <= rating ? "text-yellow-400" : "text-gray-300"}
+            >
+              ★
+            </span>
+          ))}
+        </div>
+      </label>
+
+      {/* Comment */}
+      <label className="block r mb-4">
+        <span className="text-sm block mb-1">Your Comment:</span>
+        <textarea
+          className="w-full border p-2 rounded"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </label>
+
+    
+
+      <button
+        onClick={handleSubmit}
+        className="bg-green-600 text-white px-4 py-2 rounded flex justify-center hover:bg-orange-500 w-full"
+      >
+        Submit Review
+      </button>
     </div>
   </div>
-  
+)}
 
 
+<div className="mt-12 px-3 md:px-[20vw]">
+  <h2 className="text-3xl  flex justify-center font-extrabold mb-8 text-gray-800 tracking-tight">
+  Customer Reviews
+  </h2>
+
+  {reviews.length === 0 ? (
+    <p className="text-gray-500 italic text-center">
+      Be the first to review this product.
+    </p>
+  ) : (
+    <>
+      {(showAllReviews ? reviews : reviews.slice(0, 6)).map((r, idx) => {
+        const initials = r.userName
+          ?.split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase();
+
+        return (
+          <div
+            key={idx}
+            className="bg-white p-6 rounded-3xl  shadow-xl border border-gray-100 mb-8 relative transition-transform transform hover:scale-[1.02]"
+          >
+            {/* Header */}
+            <div className="flex items-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-white flex items-center justify-center font-bold shadow-md mr-4">
+                {initials}
+              </div>
+              <div>
+                <div className="text-lg font-semibold text-gray-900">
+                  {r.userName}
+                </div>
+                <div className="text-sm text-gray-500 flex items-center gap-1">
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2v-5H3v5a2 2 0 002 2z"
+                    />
+                  </svg>
+                  {r.timestamp?.toDate?.().toLocaleDateString() ?? "Unknown date"}
+                </div>
+              </div>
+              <div className="ml-auto bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-semibold">
+                {r.rating} / 5
+              </div>
+            </div>
+
+            {/* Star Rating */}
+            <div className="flex items-center mb-3 gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <svg
+                  key={star}
+                  className={`w-5 h-5 transition-all ${
+                    star <= r.rating
+                      ? "text-yellow-400 scale-110 drop-shadow-sm"
+                      : "text-gray-300"
+                  }`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927a1 1 0 011.902 0l1.286 3.957a1 1 0 00.95.69h4.167c.969 0 1.371 1.24.588 1.81l-3.37 2.448a1 1 0 00-.364 1.118l1.287 3.957c.3.921-.755 1.688-1.538 1.118l-3.37-2.448a1 1 0 00-1.175 0l-3.37 2.448c-.783.57-1.838-.197-1.539-1.118l1.287-3.957a1 1 0 00-.364-1.118L2.075 9.384c-.783-.57-.38-1.81.588-1.81h4.167a1 1 0 00.951-.69l1.268-3.957z" />
+                </svg>
+              ))}
+            </div>
+
+            {/* Comment */}
+            <blockquote className="italic text-gray-700 relative pl-6 border-l-4 border-gray-300">
+              <span className="absolute text-3xl left-0 top-[-12px] text-gray-400 font-serif">“</span>
+              {r.comment}
+            </blockquote>
+
+            {/* Images */}
+            {Array.isArray(r.imageURLs) && r.imageURLs.length > 0 && (
+              <div className="flex flex-wrap gap-4 mt-4">
+                {r.imageURLs.map((url, i) => (
+                  <div
+                    key={i}
+                    className="w-24 h-24 rounded-xl overflow-hidden shadow-md hover:shadow-lg transform hover:scale-105 transition duration-300 border border-gray-200"
+                  >
+                    <img
+                      src={url}
+                      alt={`Review image ${i + 1}`}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Show More / Less Button */}
+      {reviews.length > 6 && (
+        <div className="text-center mt-6">
+          <button
+            onClick={() => setShowAllReviews((prev) => !prev)}
+            className="text-indigo-600 hover:text-indigo-800 underline font-semibold text-sm transition"
+          >
+            {showAllReviews ? "⬆ Show Less Reviews" : "⬇ Show More Reviews"}
+          </button>
+        </div>
+      )}
+    </>
+  )}
+</div>
+
+
+{thankYouPopup && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md text-center animate-fade-in">
+      <h2 className="text-2xl font-bold text-green-600 mb-2">Thank You!</h2>
+      <p className="text-gray-700 mb-4">Your review is valuable.</p>
+      <button
+        onClick={() => setThankYouPopup(false)}
+        className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full transition"
+      >
+        Close
+      </button>
     </div>
-    
+  </div>
+)}
+
 
 
 
