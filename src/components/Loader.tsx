@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 export default function Loader() {
   const [isExiting, setIsExiting] = useState(false);
-  const text = "Survival Of Fittest";
+  const text = "Survival of Fittest";
   const words = text.split(" "); // Split text into words
 
   useEffect(() => {

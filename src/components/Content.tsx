@@ -138,7 +138,7 @@ const Content = () => {
   const flavorNames = [
     "Classic Creamy",
     "Crunchy Honey",
-    "High Protein Dark Chocolate",
+    " Dark Chocolate",
   ];
   
 
@@ -294,13 +294,13 @@ const Content = () => {
     </div>
 
     <div className="flex flex-col  sm:w-full items-center justify-center w-full   ">
-      <div className="  flex flex-col items-center">
-        <div className=" w-full ">
+      <div className="  flex flex-col items-center ">
+        <div className=" w-full  ">
           {/* Main Product Image */}
           <img
             src={images[currentIndex]}
             alt="Flavor variant"
-            className="w-full h-auto    transition-opacity duration-100 "
+            className="w-full h-auto  transition-opacity duration-100 "
           />
 
           {/* Flavor Icon Buttons */}

@@ -419,7 +419,7 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
         <h1 className="text-2xl md:text-6xl font-bold text-white sm:mt-36 sm:text-4xl  sm:py-2 md:py-3 ">The Secret? </h1>
         <span className=" text-2xl font-normal md:6xl sm:text-4xl">Premium Ingredient,No Compromise</span>
         <p className="mt-4 font-thin text-xs  max-w-2xl sm:text-xl md:text-2xl  sm:py-3 md:py-4 text-start">
-         We source handpicked, high-quality peanuts from the <span className="font-semibold">souther regions of Asia -</span>renowned for their rich flavour and smooth texture. Combined with luxury-grade cocooa. every spoonful delivers a silky-smooth experience that melts effortlessy on your palate
+         We source handpicked, high-quality peanuts from the <span className="font-semibold">southern regions of Asia -</span>renowned for their rich flavour and smooth texture. Combined with luxury-grade cocooa. every spoonful delivers a silky-smooth experience that melts effortlessy on your palate
         </p>
       </div>
 
