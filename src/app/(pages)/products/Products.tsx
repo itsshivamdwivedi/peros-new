@@ -280,7 +280,7 @@ const handleSubmit = async () => {
     setRating(5);
     setSelectedImages([]);
     setHasReviewed(true);
-    setShowPopup(false);
+     setShowReviewPopup(true)
 
     // Show thank you modal
     setThankYouPopup(true);
@@ -295,6 +295,8 @@ const handleSubmit = async () => {
 
 
   const { addToCart } = useCart(); 
+  const [showReviewPopup, setShowReviewPopup] = useState(false); // ✅ distinct from cart
+
 
   const [variantSelections, setVariantSelections] = useState<Record<string, string>>({});
 
@@ -697,7 +699,7 @@ Switch today and snack smarter!
 <div className="my-6 flex justify-center">
   {user && !hasReviewed ? (
     <button
-      onClick={() => setShowPopup(true)}
+      onClick={() =>  setShowReviewPopup(true)}
       className="bg-green-600 text-white px-4 py-2 rounded hover:bg-orange-400"
     >
       Add a Review
@@ -710,11 +712,11 @@ Switch today and snack smarter!
 </div>
 
 {/* Review Modal */}
-{showPopup && (
+{showReviewPopup && (
   <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center px-5 z-50">
     <div className="bg-white p-6 rounded-lg max-w-lg w-full relative">
       <button
-        onClick={() => setShowPopup(false)}
+        onClick={() =>  setShowReviewPopup(false)}
         className="absolute top-2 right-3 text-xl text-gray-500 hover:text-black"
       >
         &times;
