@@ -76,10 +76,12 @@ type Variant = {
   shelfLife: string;
 };
 
+// heello
+
 const peanutButterVariants: Variant[] = [
   {
     id: uuidv4(),
-    id1:1,
+    id1:2,
     name: "Classic Creamy",
     images: [
       "/assets/jar 3.png",
@@ -103,7 +105,7 @@ const peanutButterVariants: Variant[] = [
   },
   {
     id: uuidv4(),
-    id1:2,
+    id1:1,
     name: "Crunchy Honey",
     images: [
       "/assets/jar 2.png",
