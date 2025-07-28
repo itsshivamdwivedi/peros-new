@@ -162,11 +162,11 @@ const Content = () => {
     <div className="flex flex-col items-center justify-center relative z-10 min-h-screen  bg-white ">
 
         <div className="bg-black w-full">
-          <div className="relative w-full max-w-md mx-auto sm:mt-28 sm:bg-black">
+          <div className="relative w-full  sm:mt-28 sm:bg-black">
      
       <img src="1.png" alt="Overlay" className="w-full h-auto sm:w-[60vw] sm:h-[120vh]" />
 
-        <div className="absolute top-10 left-5 w-full p-4 text-white text-xl font-bold bg-black bg-opacity-50">
+        <div className="absolute top-10 left-5 p-4 text-white text-xl font-bold bg-black bg-opacity-50 ">
       {step >= 1 && (
         <p className="font-poppins text-2xl font-normal animate-fade-up">
           The
@@ -182,23 +182,37 @@ const Content = () => {
           Indulgence
         </p>
       )}
+  <style jsx global>{`
+    @keyframes fade-up {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-      <style jsx global>{`
-        @keyframes fade-up {
-          0% {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
+    .animate-fade-up {
+      animation: fade-up 0.6s ease-out forwards;
+    }
 
-        .animate-fade-up {
-          animation: fade-up 0.6s ease-out forwards;
-        }
-      `}</style>
+    /* Hide scrollbars only visually */
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+
+    html {
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE 10+ */
+    }
+
+    body::-webkit-scrollbar {
+      display: none; /* Chrome, Safari */
+    }
+  `}</style>
     </div>
     </div>
         </div>
