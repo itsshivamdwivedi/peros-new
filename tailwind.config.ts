@@ -12,6 +12,7 @@ export default {
   	extend: {
 		fontFamily: {
 			spartan: ['"League Spartan"', 'sans-serif'],
+			 poppins: ['var(--font-poppins)'],
 		  },
 		keyframes: {
 			"caret-blink": {

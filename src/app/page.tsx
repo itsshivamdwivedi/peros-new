@@ -36,7 +36,7 @@ export default function Home() {
         <div>
           <Navbar />
           
-          <Hom  />
+      
       <Content/>
 
           

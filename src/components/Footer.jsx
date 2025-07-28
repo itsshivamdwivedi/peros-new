@@ -61,9 +61,7 @@ const Footer = () => {
 
               </div>
               </div>
-              <p className="text-gray-400">
-                Address: 123 Peros Street, Mumbai
-              </p>
+            
             </div>
 
             <div className="text-left">

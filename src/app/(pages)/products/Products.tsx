@@ -128,7 +128,7 @@ const peanutButterVariants: Variant[] = [
   {
     id: uuidv4(),
     id1:3,
-    name: "High Protein Dark Chocolate",
+    name: " Dark Chocolate Crunchy",
     images: [
       "/assets/jar 1.png",
       "/assets/slider-01-min.jpg",
@@ -138,14 +138,14 @@ const peanutButterVariants: Variant[] = [
     description:
       "A blend of peanuts, dark cocoa, and sea salt for a rich, indulgent flavor.",
     detailedDescription:
-      "Peros High Protein Dark Chocolate Peanut Butter is a powerful blend of dark cocoa, roasted peanuts, and imported whey protein — designed for fitness enthusiasts and chocolate lovers.",
+      "Peros High Protein Dark Chocolate Crunchy Peanut Butter is a powerful blend of dark cocoa, roasted peanuts, and imported whey protein — designed for fitness enthusiasts and chocolate lovers.",
     detailedDescription2:
       "Crafted in our ISO 22000 certified and FSSAI approved facility, every jar upholds the highest standards of hygiene, quality, and freshness.",
     detailedDescription3:
       "We make our protein-packed peanut butters in fresh batches daily to lock in maximum taste and nutrition.",
     shelfLife: "12 Months",
     sizes: [
-      { label: "350g", price: 180, pricel: 210 },
+      { label: "350g", price: 299, pricel: 999 },
       { label: "1kg", price: 525, pricel: 600 }
     ],
   }
