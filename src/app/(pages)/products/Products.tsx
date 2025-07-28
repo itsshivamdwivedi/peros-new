@@ -97,7 +97,7 @@ const peanutButterVariants: Variant[] = [
       "Perfect for daily snacking, breakfast, or as a versatile ingredient in your kitchen.",
     shelfLife: "12 Months",
     sizes: [
-      { label: "350g", price: 1, pricel: 200 },
+      { label: "350g", price: 175, pricel: 200 },
       { label: "1kg", price: 475, pricel: 500 },
     ],
   },

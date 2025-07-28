@@ -204,8 +204,8 @@ const Content = () => {
         </div>
     
            <section className="flex items-center justify-center bg-black scroll-animate md:hidden ">
-        <div className="md:w-full w-full p-4 flex flex-col justify-center items-center text-center mb-44" data-aos="fade-up" data-aos-delay="200">
-          <p className="text-2xl sm:text-3xl leading-relaxed  text-white mt-28">
+        <div className="md:w-full w-full p-4 flex flex-col justify-center items-center text-center pb-20 " data-aos="fade-up" data-aos-delay="200">
+          <p className="text-2xl sm:text-3xl leading-relaxed font-spartan text-white ">
             Welcome to the Future of breakfast. Peros redefines peanut butter with a commitment to purity and wellness. Experience a new standard of taste and nutrition, crafted to energize your mornings and elevate your lifestyle.
           </p>
         </div>
@@ -289,8 +289,8 @@ const Content = () => {
       
 
       {/* Product 4 */}
-      <section className="scroll-animate bg-black pt-60 pb-60">
-  <div className="flex flex-col md:flex-row rounded-lg w-full overflow-hidden">
+      <section className="scroll-animate bg-black ">
+  <div className="flex flex-col md:flex-row rounded-lg w-full overflow-hidden  mt-12">
     <div className="md:w-1/2 w-full p-4 md:p-8" data-aos="slide-right" >
       <img
         src="/assets/home-images/spoonbg.png"
@@ -328,7 +328,7 @@ const Content = () => {
         </div>
       </div>
       {/* For mobile */}
-      <section className="scroll-animate bg-black md:hidden pb-60 pt-60">
+      <section className="scroll-animate bg-black md:hidden pt-10 pb-10 ">
         <div className="flex flex-col md:flex-row rounded-lg w-full overflow-hidden ">
       
           <div className="md:w-1/2 w-full p-8 flex flex-col justify-center items-start space-y-6 mb-12" data-aos="fade-up" >
@@ -357,8 +357,8 @@ const Content = () => {
      
 
       {/* Ui for mobile */}
-      <section className="flex flex-col items-center w-full justify-center min-h-screen bg-black py-12 pb-40">
-    <div className="text-center mb-12 space-y-4 pt-60">
+      <section className="flex flex-col items-center w-full justify-center min-h-screen bg-black py-12 pb-20">
+    <div className="text-center mb-12 space-y-4">
       <h1 className="text-5xl font-bold text-white">3x Flavours</h1>
     </div>
 
@@ -393,7 +393,7 @@ const Content = () => {
             ))}
           </div>
           {/* Flavor Details / Buy Now */}
-           <div className="w-full p-8 flex flex-col items-center pb-60">
+           <div className="w-full p-8 flex flex-col items-center ">
   <h3 className="text-2xl md:text-5xl font-bold text-white mb-6 text-center">
     {flavorNames[currentIndex]}
   </h3>
@@ -411,7 +411,7 @@ const Content = () => {
       {/* Product 5 */}
       <section className="flex items-center justify-center bg-white scroll-animate">
         <div className="md:w-full w-full p-4 flex flex-col justify-center items-center text-center" data-aos="fade-up" data-aos-delay="200">
-          <p className="text-2xl sm:text-2xl leading-relaxed font-bold text-black mt-48 ">
+          <p className="text-2xl sm:text-2xl leading-relaxed font-bold text-black pt-10 ">
           At Peros, Believe that great Health starts with great Ingredients. Our Premium Peanut Butter is made from the finest handpicked peanuts found only in the southern part of Asia, ensuring an unmatched taste and nutrition in every spoonful.
           </p>
           
@@ -470,7 +470,7 @@ const Content = () => {
 <p className="font-poppins font-light text-4xl">grams of <span className="font-bold font-poppins">Protein</span></p>
 
 
-      <section className="flex justify-center items-center h-full m-8 pb-60">
+      <section className="flex justify-center items-center h-full m-8 pb-10">
   <div className="flex gap-8 flex-wrap justify-center">
     {[
       {
