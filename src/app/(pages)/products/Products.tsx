@@ -84,7 +84,7 @@ const peanutButterVariants: Variant[] = [
     id1:2,
     name: "Classic Creamy",
     images: [
-      "/assets/jar 3.png",
+      "/Os Raw.png",
       "/assets/slider-01-min.jpg",
       "/assets/slider-02-min.jpg",
       "/assets/slider-03-min.jpg"
@@ -108,7 +108,7 @@ const peanutButterVariants: Variant[] = [
     id1:1,
     name: "Crunchy Honey",
     images: [
-      "/assets/jar 2.png",
+      "Os Honey.png",
       "/assets/slider-01-min.jpg",
       "/assets/slider-02-min.jpg",
       "/assets/slider-03-min.jpg"

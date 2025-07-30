@@ -35,8 +35,7 @@ const Footer = () => {
             <div className="text-left">
               <h4 className="text-xl font-bold font-serif mb-4">About Us</h4>
               <p className="text-gray-400">
-                Peros has been making quality peanut butter since 1805. We
-                combine organic, natural, and quality ingredients.
+               At Peros, our name reflects our core belief in the power of enthusiasm. We are passionate about infusing energy and desire into every jar of our premium peanut butter. Our mission is to transform your mornings with a healthier, more refreshing breakfast alternative. With Peros, you’re not just choosing a product; you’re embracing a lifestyle that prioritizes well-being and excellence.
               </p>
             </div>
 {/* hell */}
