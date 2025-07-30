@@ -166,7 +166,7 @@ const Content = () => {
      
       <img src="1.png" alt="Overlay" className="w-full h-auto sm:h-[100vh] sm:w-[30vw] " data-aos="fade-up" data-aos-delay="200" />
 
-        <div className="absolute top-10  left-5 sm:top-56 p-4 text-white text-xl font-bold  bg-opacity-50 ">
+        <div className="absolute top-10  left-5 sm:top-72 p-4 text-white text-xl font-bold  bg-opacity-50 ">
       {step >= 1 && (
         <p className="font-poppins text-2xl font-normal animate-fade-up">
           The

@@ -10,6 +10,9 @@ import AuthContextProvider from '@/contexts/AuthContext'; // Import the AuthCont
 export const metadata = {
     title: 'Peros',
     description: 'Peanut Butter Ecommerce Website',
+      icons: {
+    icon: "./favicon1.png", // path relative to public/
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

@@ -80,7 +80,7 @@ export default function CartPage() {
       <h1 className="border-b-4 w-28 border-green-500 mb-4 mt-1 " ></h1>
       {cart.length === 0 ? (
         <div className="grid w-full mt-[60vw] lg:mt-[25vw] justify-center content-center items-center font-semibold font-serif" ref={textRef} > There are no items in your cart.
-       <Link href="/products"><button className="content-center bg-green-500 ml-8 mr-8 py-2 mt-2 px-[1vw] hover:bg-amber-400 text-white rounded-md">Continue Shopping</button> </Link>
+       <Link href="/products"><button className="content-center bg-green-500 ml-14 mr-8 py-2 mt-2 px-[1vw] hover:bg-amber-400 text-white rounded-md">Continue Shopping</button> </Link>
            </div>
         ) : (
           <div>
