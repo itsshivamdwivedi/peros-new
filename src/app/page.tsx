@@ -6,7 +6,9 @@ import Hom from "@/components/Hom";
 import Footer from "@/components/Footer";
 import Content from "@/components/Content";
 import Loader from "../components/Loader"; 
+
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 
 
 
@@ -35,7 +37,7 @@ export default function Home() {
       {!isLoading && (
         <div>
           <Navbar />
-          
+       
       
       <Content/>
 

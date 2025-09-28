@@ -164,9 +164,9 @@ const Content = () => {
         <div className=" w-full bg-black">
           <div className="relative   sm:flex sm:justify-center sm:ml-96">
      
-      <img src="1.png" alt="Overlay" className="w-full h-auto sm:h-[100vh] sm:w-[30vw] " data-aos="fade-up" data-aos-delay="200" />
+      <img src="1.png" alt="Overlay" className="w-full h-auto  sm:h-[100vh] sm:w-[30vw] " data-aos="fade-up" data-aos-delay="200" />
 
-        <div className="absolute top-10  left-5 sm:top-72 p-4 text-white text-xl font-bold  bg-opacity-50 ">
+        <div className="absolute top-8 bottom-10 left-5 sm:top-72 p-4 text-white text-xl font-bold  bg-opacity-50 ">
       {step >= 1 && (
         <p className="font-poppins text-2xl font-normal animate-fade-up">
           The
@@ -317,13 +317,13 @@ const Content = () => {
         <u>The Taste of Pure Goodness</u>
       </p>
       <p className="text-lg md:text-xl leading-relaxed text-white">
-        At Peros, we believe that great health starts with great ingredients. Our premium peanut butter is made from the finest handpicked peanuts found only in the southrn part of Asia, ensuring an unmatched taste and nutrition in every spoonful.
+        At Peros, we believe that great health starts with great ingredients. Our premium peanut butter is made from the finest handpicked peanuts found only in the southern part of Asia, ensuring an unmatched taste and nutrition in every spoonful.
       </p>
       <p className="text-lg md:text-xl leading-relaxed text-white">
-        We sourced the finest premium peanuts from the southeren parts of Asia, known  for their superior flavor and nutrient profile. After months of research, testing, and refining, Peros Peanut Butter was created
+        We sourced the finest premium peanuts from the southen parts of Asia, known  for their superior flavor and nutrient profile. After months of research, testing, and refining, Peros Peanut Butter was created
       </p>
       <p className="text-lg md:text-xl leading-relaxed text-white">
-       A brand that offers purity,taste, and high protein content without any artificial additives.
+       A brand that offers purity, taste, and high protein content without any artificial additives.
       </p>
     </div>
   </div>
@@ -350,8 +350,9 @@ const Content = () => {
               <u>Our Vision</u>
             </p>
             <p className="text-xl leading-relaxed text-white">
-               Peros is more than just a peanut butter brand--its a commitment to health , fitness, and survival of the fittest. As we grow, we plan to introduce more healthy and delicious products that align with our mission of promoting a stranger , healthier lifestyle.
-            </p>
+  Peros is more than just a peanut butter brand&mdash;it&apos;s a commitment to &quot;health, fitness&quot; and survival of the fittest. As we grow, we plan to introduce more healthy and delicious products that align with our mission of promoting a stronger, healthier lifestyle.
+</p>
+
             <p className="text-xl text-white"> 
               Join the Peros Revolution 
             </p>
@@ -426,7 +427,7 @@ const Content = () => {
       <section className="flex items-center justify-center bg-white scroll-animate">
         <div className="md:w-full w-full p-4 flex flex-col justify-center items-center text-center" data-aos="fade-up" data-aos-delay="200">
           <p className="text-2xl sm:text-2xl leading-relaxed font-bold text-black pt-10 ">
-          At Peros, Believe that great Health starts with great Ingredients. Our Premium Peanut Butter is made from the finest handpicked peanuts found only in the southern part of Asia, ensuring an unmatched taste and nutrition in every spoonful.
+          At Peros, we believe that great Health starts with great Ingredients. Our Premium Peanut Butter is made from the finest handpicked peanuts found only in the southern part of Asia, ensuring an unmatched taste and nutrition in every spoonful.
           </p>
           
       
@@ -493,7 +494,7 @@ const Content = () => {
       },
       {
         title: "Zero",
-        description: "Zero Cholestrol to ensure that peros provide a safe and healthy breakfast",
+        description: "Zero Cholesterol to ensure that Peros provide a safe and healthy breakfast",
       },
       {
         title: "High",
@@ -501,7 +502,7 @@ const Content = () => {
       },
       {
         title: "Zero",
-        description: " Zero addatives on classic raw to provide you a spoon full of natural peanuts",
+        description: " Zero additives on classic raw to provide you a spoon full of natural peanuts",
       },
     ].map((item, index) => (
       <div className="text-center" key={index}>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, updateDoc, collectionGroup, deleteDoc, getDoc } from "firebase/firestore";
+import { useStock } from "@/contexts/StockContext";
 
 
 interface Order {
@@ -61,8 +62,34 @@ const [loadingReviews, setLoadingReviews] = useState(true);
       setLoading(false);
     }
   };
+const [productsData, setProductsData] = useState<Record<string, any>>({});
+
+useEffect(() => {
+  const testFetch = async () => {
+    try {
+      console.log("Attempting to fetch products...");
+      const productsSnapshot = await getDocs(collection(db, "products"));
+      console.log("Snapshot received:", productsSnapshot);
+      console.log("Snapshot size:", productsSnapshot.size);
+      productsSnapshot.forEach((docSnap) => {
+        console.log("Doc ID:", docSnap.id, "Data:", docSnap.data());
+      });
+    } catch (err) {
+      console.error("Fetch failed:", err);
+    }
+  };
+  testFetch();
+}, []);
 
 
+
+
+
+
+
+
+
+const { stockByProduct, setStock } = useStock();
 
 
     const [reviewsByProduct, setReviewsByProduct] = useState<Record<string, { id: string; data: Review }[]>>({});
@@ -177,6 +204,40 @@ const [loadingReviews, setLoadingReviews] = useState(true);
       setError(err.message || "Error deleting order.");
     }
   };
+
+  // Function to update product size stock in Firestore
+const updateProductStock = async (
+  productId: string,
+  sizeLabel: string,
+  inStock: boolean
+) => {
+  try {
+    const productRef = doc(db, "products", productId);
+    const productSnap = await getDoc(productRef);
+
+    if (!productSnap.exists()) {
+      throw new Error("Product not found");
+    }
+
+    const productData = productSnap.data();
+
+    const updatedSizes = productData.sizes.map((size: any) =>
+      size.label === sizeLabel ? { ...size, inStock } : size
+    );
+
+    await updateDoc(productRef, { sizes: updatedSizes });
+
+    // Update local state to immediately reflect changes in UI
+    setProductsData((prev) => ({
+      ...prev,
+      [productId]: { ...productData, sizes: updatedSizes },
+    }));
+
+  } catch (err) {
+    console.error("Error updating stock:", err);
+  }
+};
+
 
 
   
@@ -333,6 +394,36 @@ const [loadingReviews, setLoadingReviews] = useState(true);
         </div>
       )}
        <div className="max-w-5xl mx-auto py-8 px-4">
+        <div className="max-w-5xl mx-auto py-8 px-4">
+  <h2 className="text-2xl font-bold mb-6 font-serif text-gray-800">Manage Product Stock</h2>
+
+  {Object.keys(productsData).length === 0 ? (
+    <p>Loading products...</p>
+  ) : (
+    Object.entries(productsData).map(([productId, product]) => (
+      <div key={productId} className="mb-4 border border-gray-200 rounded-lg p-4">
+        <h3 className="font-semibold mb-2">{product.name || productId}</h3>
+
+        {product.sizes?.length > 0 ? (
+          product.sizes.map((size: any) => (
+            <div key={size.label} className="flex gap-2 items-center mb-1">
+              <span>{size.label} {size.inStock ? "" : "(Out of Stock)"}</span>
+              <button
+                className={`px-2 py-1 rounded text-white ${size.inStock ? "bg-red-500" : "bg-green-500"}`}
+                onClick={() => updateProductStock(productId, size.label, !size.inStock)}
+              >
+                {size.inStock ? "Mark Out of Stock" : "Mark In Stock"}
+              </button>
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-500 italic">No sizes available for this product</p>
+        )}
+      </div>
+    ))
+  )}
+</div>
+
       <h2 className="text-2xl font-bold mb-6 font-serif text-gray-800">All Product Reviews</h2>
       {error && <p className="text-red-500 mb-4">{error}</p>}
       {loading ? (
@@ -342,9 +433,15 @@ const [loadingReviews, setLoadingReviews] = useState(true);
       ) : (
         Object.entries(reviewsByProduct).map(([productId, reviews]) => (
           <div key={productId} className="mb-8 border border-gray-200 rounded-lg shadow-sm p-6 bg-white">
-            <h3 className="text-xl font-semibold mb-4 font-serif text-gray-700">
-              Product ID: <span className="font-mono">{productId}</span>
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+  <h3 className="text-xl font-semibold font-serif text-gray-700">
+    Product ID: <span className="font-mono">{productId}</span>
+  </h3>
+
+
+
+</div>
+
             {reviews.map((review) => (
               <div
                 key={review.id}

@@ -2,6 +2,7 @@
 import Navbar from '@/components/Navbar';
 import './globals.css';
 import { ReactNode } from 'react';
+import {StockProvider} from '@/contexts/StockContext';
 
 import { NextUIProvider } from '@nextui-org/react';
 import { Toaster } from 'react-hot-toast';
@@ -23,7 +24,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 
                 <NextUIProvider>
                     {/* <AuthContextProvider> */}
-                        {children}
+                   <StockProvider>
+            {children}
+          </StockProvider>
                     {/* </AuthContextProvider> */}
                 </NextUIProvider>
             </body>

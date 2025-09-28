@@ -1,34 +1,25 @@
 "use client";
 
 import Image from "next/image";
-import React, {  useRef, useState } from "react";
-import { useCart } from "@/contexts/CartContext"; 
-import gsap from "gsap";
+import React, { useEffect, useRef, useState } from "react";
+import { useCart } from "@/contexts/CartContext";
+import { useStock } from "@/contexts/StockContext";
 import Link from "next/link";
-import ScrollTrigger from "gsap/ScrollTrigger";
+import { useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import Footer from "@/components/Footer";
-import { useRouter, useSearchParams } from "next/navigation"; 
-
-
-//hello1
-
-
-import { FaStar, FaChevronLeft, FaChevronRight, FaStarHalfAlt } from "react-icons/fa";
-import { useEffect} from "react";
-import { useParams } from "next/navigation";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  Timestamp,
-} from "firebase/firestore";
+import { FaStar } from "react-icons/fa";
+import { collection, addDoc, getDocs, Timestamp } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import Footer from "@/components/Footer";
 
+interface Size {
+  label: string;
+  price: number;
+  pricel: number;
+  inStock: boolean;
+}
 
 interface Review {
   userId: string;
@@ -36,9 +27,8 @@ interface Review {
   rating: number;
   comment: string;
   timestamp: Timestamp;
-  imageURLs?: string[]; // optional field for image links
+  imageURLs?: string[];
 }
-
 
 
 const CustomerReviews = () => {
@@ -54,326 +44,212 @@ const ratingDistribution = [
   { stars: 1, count: 0 },
 ];
 
-type Size = {
-  label: string;
-  price: number;
-  pricel: number;
-};
-
-type UUID = string;
-
-type Variant = {
-  id: UUID;
+interface Variant {
+  id: string;
+   id1: number; 
   name: string;
   images: string[];
   description: string;
   sizes: Size[];
-  id1:number;
- 
   detailedDescription: string;
   detailedDescription2: string;
   detailedDescription3: string;
   shelfLife: string;
-};
-
-// heello
-
-const peanutButterVariants: Variant[] = [
-  {
-    id: uuidv4(),
-    id1:2,
-    name: "Classic Creamy",
-    images: [
-      "/Os Raw.png",
-      "/assets/slider-01-min.jpg",
-      "/assets/slider-02-min.jpg",
-      "/assets/slider-03-min.jpg"
-    ],
-    description:
-      "Peros Classic Creamy Peanut Butter is crafted for those who love a smooth, rich spread without any compromise on quality. Made from premium-grade roasted peanuts, this variant delivers a naturally delicious flavor with a velvety texture that melts on your tongue.",
-    detailedDescription:
-      "At Peros, we produce all our nut butters in an FSSAI approved and ISO 22000 certified facility, ensuring the highest food safety and nutritional standards.",
-    detailedDescription2:
-      "Freshly made in small batches daily, our butters are suitable for kids, adults, and the health-conscious alike.",
-    detailedDescription3:
-      "Perfect for daily snacking, breakfast, or as a versatile ingredient in your kitchen.",
-    shelfLife: "12 Months",
-    sizes: [
-      { label: "350g", price: 175, pricel: 200 },
-      { label: "1kg", price: 475, pricel: 500 },
-    ],
-  },
-  {
-    id: uuidv4(),
-    id1:1,
-    name: "Crunchy Honey",
-    images: [
-      "Os Honey.png",
-      "/assets/slider-01-min.jpg",
-      "/assets/slider-02-min.jpg",
-      "/assets/slider-03-min.jpg"
-    ],
-    description:
-      "Chunky texture with real peanut bits and a touch of honey for natural sweetness.",
-    detailedDescription:
-      "Peros Crunchy Honey Peanut Butter combines roasted peanuts with natural honey and crunchy peanut bits, offering a textured and flavorful experience with every bite.",
-    detailedDescription2:
-      "Manufactured in our state-of-the-art ISO 22000 and FSSAI certified plant, each jar is made with love, quality, and cleanliness at the forefront.",
-    detailedDescription3:
-      "Our commitment to freshness means every batch is made daily and delivered straight to you with full flavor intact.",
-    shelfLife: "12 Months",
-    sizes: [
-      { label: "350g", price: 170, pricel: 200 },
-      { label: "1kg", price: 500, pricel: 550 },
-    ],
-  },
-  {
-    id: uuidv4(),
-    id1:3,
-    name: " Dark Chocolate Crunchy",
-    images: [
-      "/assets/jar 1.png",
-      "/assets/slider-01-min.jpg",
-      "/assets/slider-02-min.jpg",
-      "/assets/slider-03-min.jpg"
-    ],
-    description:
-      "A blend of peanuts, dark cocoa, and sea salt for a rich, indulgent flavor.",
-    detailedDescription:
-      "Peros High Protein Dark Chocolate Crunchy Peanut Butter is a powerful blend of dark cocoa, roasted peanuts, and imported whey protein — designed for fitness enthusiasts and chocolate lovers.",
-    detailedDescription2:
-      "Crafted in our ISO 22000 certified and FSSAI approved facility, every jar upholds the highest standards of hygiene, quality, and freshness.",
-    detailedDescription3:
-      "We make our protein-packed peanut butters in fresh batches daily to lock in maximum taste and nutrition.",
-    shelfLife: "12 Months",
-    sizes: [
-      { label: "350g", price: 299, pricel: 999 },
-      { label: "1kg", price: 525, pricel: 600 }
-    ],
-  }
-];
-
-
-
+}
 
 const Products: React.FC = () => {
+  const [products, setProducts] = useState<Variant[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [selectedSize, setSelectedSize] = useState<Size | null>(null);
+  const [currentImage, setCurrentImage] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
-    const productDetailRef = useRef<HTMLDivElement>(null);
-  const [selectedVariant, setSelectedVariant] = useState<Variant>(
-    peanutButterVariants[0]
-  );
 
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [averageRating, setAverageRating] = useState<number>(0);
+  const [reviewCount, setReviewCount] = useState<number>(0);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showReviewPopup, setShowReviewPopup] = useState(false);
+  const [thankYouPopup, setThankYouPopup] = useState(false);
+
+  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(5);
+  const [user, setUser] = useState<any>(null);
+  const [hasReviewed, setHasReviewed] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
 
-  const [currentImage, setCurrentImage] = useState<string>(
-    selectedVariant.images[0]
-  );
-  const [selectedSize, setSelectedSize] = useState<Size>(
-    selectedVariant.sizes[0]
-  );
-  const [showPopup, setShowPopup] = useState(false);
-  const params = useParams();
-    const rawSlug = params?.slug;
-    const productId = typeof rawSlug === "string" ? rawSlug : rawSlug?.[0] || "default";
-  
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [rating, setRating] = useState<number>(5);
-    const [comment, setComment] = useState("");
-    const [user, setUser] = useState<any>(null);
-    const [hasReviewed, setHasReviewed] = useState(false);
-    const [averageRating, setAverageRating] = useState<number>(0);
-    const [showAllReviews, setShowAllReviews] = useState(false);
+  const searchParams = useSearchParams();
+  const idParam = searchParams.get("id1");
 
-const [reviewCount, setReviewCount] = useState<number>(0);
-
-const storage = getStorage();
+  const { stockByProduct } = useStock();
+  const storage = getStorage();
+  const productDetailRef = useRef<HTMLDivElement>(null);
+  const { addToCart } = useCart();
 
 
-  
-    useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-        setUser(firebaseUser);
+  const handleVariantClick2 = (variant: Variant, sizeOverride?: Size) => {
+  setSelectedVariant(variant);
+  setCurrentImage(variant.images[0]);
+  setSelectedSize(sizeOverride || variant.sizes[0]);
+  setQuantity(1);
+
+  // Scroll to top of product detail view
+  setTimeout(() => {
+    productDetailRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, 100);
+};
+
+
+ useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "products"));
+
+      const fetched: Variant[] = snapshot.docs.map((doc) => {
+        const data = doc.data() as Omit<Variant, "id">;
+
+        // Fix image paths for Next.js
+        const images = (data.images || []).map((img) =>
+          img.startsWith("/") || img.startsWith("http") ? img : `/${img}`
+        );
+
+        return { id: doc.id, ...data, images };
       });
-      return () => unsubscribe();
-    }, []);
-  
-    useEffect(() => {
-      if (productId) {
-        fetchReviews();
+
+      setProducts(fetched);
+
+      // Select product based on id1 query param
+      if (idParam) {
+        const found = fetched.find((p) => p.id1.toString() === idParam);
+        if (found) {
+          setSelectedVariant(found);
+          setSelectedSize(found.sizes[0]);
+          setCurrentImage(found.images[0]);
+        }
+      } else if (fetched.length > 0) {
+        setSelectedVariant(fetched[0]);
+        setSelectedSize(fetched[0].sizes[0]);
+        setCurrentImage(fetched[0].images[0]);
       }
-    }, [productId, user]);
-    const fetchReviews = async () => {
-  try {
-    const reviewRef = collection(db, "products", productId, "reviews");
-    const reviewSnap = await getDocs(reviewRef);
-    const fetched: Review[] = [];
-
-    let total = 0;
-
-    reviewSnap.forEach((doc) => {
-      const data = doc.data() as Review;
-      fetched.push(data);
-      total += data.rating;
-      if (user && data.userId === user.uid) {
-        setHasReviewed(true);
-      }
-    });
-
-    setReviews(fetched);
-    setReviewCount(fetched.length);
-    setAverageRating(fetched.length > 0 ? total / fetched.length : 0);
-  } catch (error) {
-    console.error("Error fetching reviews:", error);
-  }
-};
-
-  
-    // const fetchReviews = async () => {
-    //   try {
-    //     const reviewRef = collection(db, "products", productId, "reviews");
-    //     const reviewSnap = await getDocs(reviewRef);
-    //     const fetched: Review[] = [];
-  
-    //     reviewSnap.forEach((doc) => {
-    //       const data = doc.data() as Review;
-    //       fetched.push(data);
-    //       if (user && data.userId === user.uid) {
-    //         setHasReviewed(true);
-    //       }
-    //     });
-  
-    //     setReviews(fetched);
-    //   } catch (error) {
-    //     console.error("Error fetching reviews:", error);
-    //   }
-    // };
-  
-// Review Submit Handler
-
-
-const [thankYouPopup, setThankYouPopup] = useState(false);
-const handleSubmit = async () => {
-  if (!user || hasReviewed || comment.trim() === "") return;
-
-  try {
-    const imageURLs: string[] = [];
-
-    for (const image of selectedImages) {
-      const imageRef = ref(storage, `reviews/${productId}/${user.uid}/${image.name}`);
-      const snapshot = await uploadBytes(imageRef, image);
-      const url = await getDownloadURL(snapshot.ref);
-      imageURLs.push(url);
-    }
-
-    const reviewData: Review = {
-      userId: user.uid,
-      userName: user.displayName || user.email || "Anonymous",
-      rating: Math.max(1, Math.min(5, rating)),
-      comment,
-      timestamp: Timestamp.now(),
-      imageURLs,
-    };
-
-    const reviewRef = collection(db, "products", productId, "reviews");
-    await addDoc(reviewRef, reviewData);
-
-    // Reset form
-    setComment("");
-    setRating(5);
-    setSelectedImages([]);
-    setHasReviewed(true);
-     setShowReviewPopup(true)
-
-    // Show thank you modal
-    setThankYouPopup(true);
-
-    await fetchReviews(); // Refresh UI
-
-  } catch (error) {
-    console.error("Error submitting review:", error);
-    alert("Something went wrong. Please try again.");
-  }
-};
-
-
-  const { addToCart } = useCart(); 
-  const [showReviewPopup, setShowReviewPopup] = useState(false); // ✅ distinct from cart
-
-
-  const [variantSelections, setVariantSelections] = useState<Record<string, string>>({});
-
-const handleSizeChange = (variantId: string, sizeLabel: string) => {
-  setVariantSelections((prev) => ({ ...prev, [variantId]: sizeLabel }));
-};
-
-  const handleVariantClick = (variantId: string) => {
-    const variant = peanutButterVariants.find((v) => v.id === variantId);
-    if (variant) {
-      setSelectedVariant(variant);
-      setCurrentImage(variant.images[0]);
-      setSelectedSize(variant.sizes[0]);
+    } catch (error) {
+      console.error("Error fetching products:", error);
     }
   };
 
+  fetchProducts();
+}, [idParam]);
 
-   const handleVariantClick2 = (variant: Variant, sizeOverride?: Size) => {
-    setSelectedVariant(variant);
-    setCurrentImage(variant.images[0]);
-    setSelectedSize(sizeOverride || variant.sizes[0]);
-    setQuantity(1);
+  // Listen for auth state
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => setUser(firebaseUser));
+    return () => unsubscribe();
+  }, []);
 
-    // Scroll to top of product detail view
-    setTimeout(() => {
-      productDetailRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
+ // Fetch reviews whenever selectedVariant changes
+useEffect(() => {
+  if (!selectedVariant?.id) return;
+
+  const fetchReviews = async () => {
+    try {
+      const reviewRef = collection(db, "products", selectedVariant.id, "reviews");
+      const reviewSnap = await getDocs(reviewRef);
+      const fetched: Review[] = [];
+      let total = 0;
+
+      reviewSnap.forEach((doc) => {
+        const data = doc.data() as Review;
+        fetched.push(data);
+        total += data.rating;
+        if (user && data.userId === user.uid) setHasReviewed(true);
+      });
+
+      setReviews(fetched);
+      setReviewCount(fetched.length);
+      setAverageRating(fetched.length > 0 ? total / fetched.length : 0);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    }
   };
 
- 
+  fetchReviews();
+}, [selectedVariant?.id, user]);
+
+
+  // Handlers
   const handleSizeClick = (sizeLabel: string) => {
+    if (!selectedVariant) return;
     const size = selectedVariant.sizes.find((s) => s.label === sizeLabel);
-    if (size) {
-      setSelectedSize(size);
-    }
+    if (size) setSelectedSize(size);
   };
 
   const handleAddToCart = () => {
-    const cartItem = {
+    if (!selectedVariant || !selectedSize) return;
+    addToCart({
       id: selectedVariant.id,
       title: `${selectedVariant.name} - ${selectedSize.label}`,
       quantity,
       price: selectedSize.price,
       image: currentImage,
-      size:selectedSize.label,
-      pricel:selectedSize.pricel,
-    };
-    addToCart(cartItem); 
+      size: selectedSize.label,
+      pricel: selectedSize.pricel,
+    });
     setShowPopup(true);
     setTimeout(() => setShowPopup(false), 2500);
-
   };
 
+  const handleSubmitReview = async () => {
+    if (!user || hasReviewed || !selectedVariant || comment.trim() === "") return;
 
-    const searchParams = useSearchParams();
-  const id1Param = searchParams.get("id1");
-
-  useEffect(() => {
-    if (id1Param) {
-      const id1Num = parseInt(id1Param, 10);
-      const foundVariant = peanutButterVariants.find(
-        (variant) => variant.id1 === id1Num
-      );
-      if (foundVariant) {
-        setSelectedVariant(foundVariant);
-        setCurrentImage(foundVariant.images[0]);
-        setSelectedSize(foundVariant.sizes[0]);
-        setQuantity(1);
+    try {
+      const imageURLs: string[] = [];
+      for (const image of selectedImages) {
+        const imageRef = ref(storage, `reviews/${selectedVariant.id}/${user.uid}/${image.name}`);
+        const snapshot = await uploadBytes(imageRef, image);
+        const url = await getDownloadURL(snapshot.ref);
+        imageURLs.push(url);
       }
-    }
-  }, [id1Param]);
 
-  if (!selectedVariant) {
-    return <p>Loading product...</p>;
-  }
+      const reviewData: Review = {
+        userId: user.uid,
+        userName: user.displayName || user.email || "Anonymous",
+        rating: Math.max(1, Math.min(5, rating)),
+        comment,
+        timestamp: Timestamp.now(),
+        imageURLs,
+      };
+
+      await addDoc(collection(db, "products", selectedVariant.id, "reviews"), reviewData);
+
+      setComment("");
+      setRating(5);
+      setSelectedImages([]);
+      setHasReviewed(true);
+      setShowReviewPopup(false);
+      setThankYouPopup(true);
+
+      // Refresh reviews
+      const reviewSnap = await getDocs(collection(db, "products", selectedVariant.id, "reviews"));
+      const fetched: Review[] = [];
+      let total = 0;
+      reviewSnap.forEach((doc) => {
+        const data = doc.data() as Review;
+        fetched.push(data);
+        total += data.rating;
+      });
+      setReviews(fetched);
+      setReviewCount(fetched.length);
+      setAverageRating(fetched.length > 0 ? total / fetched.length : 0);
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong while submitting your review.");
+    }
+  };
+
+  const isSelectedSizeInStock = selectedSize?.inStock ?? false;
+  const isInStock = selectedVariant?.sizes.some((s) => s.inStock) ?? false;
+
+  if (!selectedVariant || !selectedSize) return <p>Loading product...</p>;
+
 
   return (
     <div className="w-full  lg:sticky top-20 max-h-screen overflow-auto relative z-10 sm:mt-4 ">
@@ -436,26 +312,31 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
             <h3 className="line-through text-gray-400">M.R.P: ₹{selectedSize.pricel}</h3>
             <h3 className="text-black font-sans">Tax included</h3>
           </div>
+           
+
+     {!isInStock && (
+  <p className="text-red-500 font-bold">This product is out of stock</p>
+)}
+
+
 
           
 
           <div className="flex flex-col gap-4 mt-4">
             <h4 className="font-semibold font-serif">Size</h4>
             <div className="flex items-center gap-3">
-              {selectedVariant.sizes.map((size) => (
+    {selectedVariant.sizes.map(size => (
                 <button
                   key={size.label}
                   onClick={() => handleSizeClick(size.label)}
-                  className={`py-1 px-4 rounded-md font-semibold ${
-                    selectedSize.label === size.label
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200"
-                  }`}
+                  disabled={!size.inStock}
+                  className={`py-1 px-4 rounded-md font-semibold ${selectedSize.label === size.label ? "bg-green-600 text-white" : "bg-gray-200"} ${!size.inStock ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  {size.label}
+                  {size.label} {!size.inStock && "(Out of Stock)"}
                 </button>
               ))}
-            </div>
+</div>
+
          
 
          
@@ -463,6 +344,7 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
           <div className='flex flex-col gap-4'>
           
           <div className=' sm:flex sm:flex-row gap-3 flex flex-col  '>
+            
      
      <div className="grid grid-cols-2 gap-2 sm:gap-16 ">
      <div className='flex    justify-between mt-4 overflow-hidden rounded-md ring-1 ring-gray-400 md:w-[18vw] h-9 sm:h-9 items-start'>
@@ -470,34 +352,53 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
      <span className=' mt-2'> {quantity}</span>    
         <button  className="cursor-pointer flex justify-center content-center    w-[10vw] lg:w-10 sm:w-10  2xl:w-20 font-bold text-3xl items-center mt-1 text-black"onClick={() => setQuantity((prev) => prev + 1)}>+</button>   
           </div>
-          <div className="flex items-end"><button className='w-full text-sm md:w-[18vw] disabled:bg-pink-200 disabled:text-white disabled:ring-none ring-1 bg-green-600 px-4 py-2 rounded-md font-semibold hover:text-white hover:bg-amber-400 disabled:cursor-not-allowed text-white'
        
-       onClick={handleAddToCart}
-    
-       
-       >Add to Cart </button></div> 
+<div className="flex items-end">
+  <button
+    className="w-full md:w-[18vw] text-sm bg-green-600 text-white px-4 py-2 rounded-md font-semibold ring-1 ring-green-500 hover:bg-amber-400 hover:text-white disabled:bg-pink-200 disabled:text-white disabled:ring-none disabled:cursor-not-allowed"
+    onClick={handleAddToCart}
+    disabled={!isSelectedSizeInStock}
+  >
+    {isSelectedSizeInStock ? "Add to Cart" : "Out of Stock"}
+  </button>
+  
+</div>
+
+
+
 
      </div>
+
+     
     
        
 
 
           
 </div>
-<div className='flex '> <Link href ="/cart"> <button className='w-[92vw] sm:w-full md:w-[18vw] text-sm disabled:bg-pink-200 disabled:text-white bg-green-600 text-white hover:bg-amber-400 disabled:ring-none rounded-md ring-1 font-semibold ring-green-500 px-4 py-2 disabled:cursor-not-allowed '
-        onClick={handleAddToCart}  >Buy it now</button></Link>  </div>
+
+  <Link href="/cart">
+    <button
+      className="w-full md:w-[18vw] text-sm bg-green-600 text-white px-4 py-2 rounded-md font-semibold ring-1 ring-green-500 hover:bg-amber-400 hover:text-white disabled:bg-pink-200 disabled:text-white disabled:ring-none disabled:cursor-not-allowed"
+      onClick={handleAddToCart}
+      disabled={!isSelectedSizeInStock}
+    >
+      {isSelectedSizeInStock ? "Buy it Now" : "Out of Stock"}
+    </button>
+  </Link>
+
+
+
 
           
         </div>
-         {selectedVariant && (
-   <div className="mt-4 space-y-3 text-left">
-  <p>{selectedVariant.detailedDescription}</p>
-  <p>{selectedVariant.description}</p>
-  <p>{selectedVariant.detailedDescription2}</p>
-  <p>{selectedVariant.detailedDescription3}</p>
-  <p className="text-green-600">{selectedVariant.shelfLife}</p>
-</div>
-)}
+            {/* Detailed Description */}
+          <div className="mt-6 text-gray-700">
+            <p>{selectedVariant.detailedDescription}</p>
+            <p className="mt-2">{selectedVariant.detailedDescription2}</p>
+            <p className="mt-2">{selectedVariant.detailedDescription3}</p>
+            <p className="mt-2 font-semibold">Shelf Life: {selectedVariant.shelfLife}</p>
+          </div>
 <div className="px-[20vw] m-3"><div className="border-b-4 border-green-500 ..."></div>
       
 
@@ -575,9 +476,9 @@ const handleSizeChange = (variantId: string, sizeLabel: string) => {
       {/* Heading */}
       <div className="relative mt-20 md:mt-44 sm:mt-36 text-white font-sans">
         <h1 className="text-2xl md:text-6xl font-bold text-white sm:mt-36 sm:text-4xl  sm:py-2 md:py-3 ">The Secret? </h1>
-        <span className=" text-2xl font-normal md:6xl sm:text-4xl">Premium Ingredient,No Compromise</span>
+        <span className=" text-2xl font-normal md:6xl sm:text-4xl">Premium Ingredient, No Compromise</span>
         <p className="mt-4 font-thin text-xs  max-w-2xl sm:text-xl md:text-2xl  sm:py-3 md:py-4 text-start">
-         We source handpicked, high-quality peanuts from the <span className="font-semibold">southern regions of Asia -</span>renowned for their rich flavour and smooth texture. Combined with luxury-grade cocooa. every spoonful delivers a silky-smooth experience that melts effortlessy on your palate
+         We source handpicked, high-quality peanuts from the <span className="font-semibold">southern regions of Asia -</span>renowned for their rich flavour and smooth texture. Combined with luxury-grade cocoa. every spoonful delivers a silky-smooth experience that melts effortlessly on your palate
         </p>
       </div>
 
@@ -755,8 +656,9 @@ Switch today and snack smarter!
     
 
       <button
-        onClick={handleSubmit}
+       
         className="bg-green-600 text-white px-4 py-2 rounded flex justify-center hover:bg-orange-500 w-full"
+        onClick={handleSubmitReview}
       >
         Submit Review
       </button>
@@ -907,55 +809,66 @@ Switch today and snack smarter!
     <div className="border-b-8 ml-23 mr-23 hidden sm:inline border-green-500"></div>
   </div>
 
-  {/* Horizontal scroll area */}
-  <div className="w-full flex  overflow-x-auto  scroll-hide sm:mt-10 ">
-    <div className="flex sm:flex-col gap-6  sm:gap-14 px-4 sm:ml-[25vw] ">
-      {peanutButterVariants.map((variant) => {
-        const selectedLabel = variantSelections[variant.id] || variant.sizes[0].label;
-        const selectedSize = variant.sizes.find((s) => s.label === selectedLabel)!;
+ {/* Horizontal scroll area */}
+<div className="w-full flex overflow-x-auto scroll-hide sm:mt-10">
+  <div className="flex sm:flex-col gap-6 sm:gap-14 px-4 sm:ml-[25vw]">
+    {products.map((variant) => {
+      const selectedLabel = variant.sizes[0].label; // default size for horizontal display
+      const selectedSize = variant.sizes.find((s) => s.label === selectedLabel)!;
 
-        return (
-          <div
-            key={variant.id}
-            className="min-w-[45vw] max-w-[45vw]  border rounded-lg p-4 shadow hover:shadow-md"
+      return (
+        <div
+          key={variant.id}
+          className="min-w-[45vw] max-w-[45vw] border rounded-lg p-4 shadow hover:shadow-md cursor-pointer"
+          onClick={() => {
+            setSelectedVariant(variant);
+            setSelectedSize(selectedSize);
+            setCurrentImage(variant.images[0]);
+          }}
+        >
+          <Image
+            src={variant.images[0]}
+            width={150}
+            height={150}
+            alt={variant.name}
+            className="mx-auto object-contain mb-2"
+          />
+          <h3 className="text-center font-semibold mb-1 sm:text-3xl">{variant.name}</h3>
+
+          <select
+            className="w-[20vw] px-2 ml-6 py-1 mt-1 sm:mt-5 border rounded mb-3 sm:ml-[19vw] sm:w-[5vw]"
+            value={selectedLabel}
+            onChange={(e) => {
+              const size = variant.sizes.find((s) => s.label === e.target.value);
+              if (size) setSelectedSize(size);
+            }}
           >
-            <img
-              src={variant.images[0]}
-              alt={variant.name}
-              className="w-32 h-32 sm:h-[35vh] sm:w-[35] mx-auto object-contain mb-2"
-            />
-            <h3 className="text-center font-semibold mb-1 sm:text-3xl">{variant.name}</h3>
+            {variant.sizes.map((size) => (
+              <option key={size.label} value={size.label}>
+                {size.label}
+              </option>
+            ))}
+          </select>
 
-            <select
-              className="w-[20vw] px-2 ml-6 py-1 mt-1 sm:mt-5 border rounded mb-3 sm:ml-[19vw] sm:w-[5vw]"
-              value={selectedLabel}
-              onChange={(e) => handleSizeChange(variant.id, e.target.value)}
-            >
-              {variant.sizes.map((size) => (
-                <option key={size.label} value={size.label}>
-                  {size.label}
-                </option>
-              ))}
-            </select>
-
-            <div className="text-center text-lg  font-semibold text-green-600">
-              ₹{selectedSize.price}
-              <span className="text-sm text-gray-400 line-through ml-2">
-                ₹{selectedSize.pricel}
-              </span>
-            </div>
-
-            <button
-              onClick={() => handleVariantClick2(variant, selectedSize)}
-              className="w-full mt-2 sm:w-[25vw] sm:ml-[8vw] bg-green-500 sm:mt-5 text-white py-1 rounded hover:bg-green-600"
-            >
-              Buy
-            </button>
+          <div className="text-center text-lg font-semibold text-green-600">
+            ₹{selectedSize.price}
+            {selectedSize.pricel && (
+              <span className="text-sm text-gray-400 line-through ml-2">₹{selectedSize.pricel}</span>
+            )}
           </div>
-        );
-      })}
-    </div>
+
+          <button
+         onClick={() => handleVariantClick2(variant, selectedSize)}
+            className="w-full mt-2 sm:w-[25vw] sm:ml-[8vw] bg-green-500 sm:mt-5 text-white py-1 rounded hover:bg-green-600"
+          >
+            View
+          </button>
+        </div>
+      );
+    })}
   </div>
+</div>
+
 </div>
 
 
@@ -969,8 +882,7 @@ Switch today and snack smarter!
         <img src="/assets/iso.png" alt="ISO 9001:2024" className="h-12 w-auto" />
         <img src="/assets/safaai.png" alt="FSSAI" className="h-12 w-auto" />
       </div>
-      <h3 className="text-xl font-bold">PEROS PEANUT BUTTER PVT</h3>
-      <p className="text-sm text-gray-600">CIN: U15400CT2022PTCO13184</p>
+     
       <p className="text-xs font-normal
        text-gray-500 mt-4 text-center">© 2025 PEROS. All rights reserved.<br/> Powered by Organic Goodness</p>
     </div>
@@ -992,3 +904,13 @@ Switch today and snack smarter!
 };
 
 export default Products;
+
+
+
+
+
+
+
+
+
+
