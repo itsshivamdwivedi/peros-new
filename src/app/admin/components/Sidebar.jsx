@@ -10,6 +10,7 @@ import {
   LogOut,
   PackageOpen,
   ShieldCheck,
+  Package,
   ShoppingCart,
   Star,
   User,
@@ -25,6 +26,11 @@ export default function Sidebar() {
       name: "Orders",
       link: "/admin/orders",
       icon: <ShoppingCart className="h-5 w-5" />,
+    },
+    {
+      name: "Stock",
+      link: "/admin/stock",
+      icon: <Package className="h-5 w-5" />,
     },
   
     {
