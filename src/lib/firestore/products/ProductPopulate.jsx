@@ -18,7 +18,7 @@ const peanutButterVariants = [
       "Perfect for daily snacking, breakfast, or as a versatile ingredient in your kitchen.",
     shelfLife: "12 Months",
     sizes: [
-      { label: "350g", price: 175, pricel: 200, inStock: true },
+      { label: "500g", price: 249, pricel: 300, inStock: true },
       { label: "1kg", price: 475, pricel: 500, inStock: true },
     ],
   },
@@ -37,7 +37,7 @@ const peanutButterVariants = [
       "Our commitment to freshness means every batch is made daily and delivered straight to you with full flavor intact.",
     shelfLife: "12 Months",
     sizes: [
-      { label: "350g", price: 170, pricel: 200, inStock: true },
+      { label: "500g", price: 249, pricel: 300, inStock: true },
       { label: "1kg", price: 500, pricel: 550, inStock: true },
     ],
   },
@@ -56,7 +56,7 @@ const peanutButterVariants = [
       "We make our protein-packed peanut butters in fresh batches daily to lock in maximum taste and nutrition.",
     shelfLife: "12 Months",
     sizes: [
-      { label: "350g", price: 199, pricel: 250, inStock: true },
+      { label: "500g", price: 299, pricel: 330, inStock: true },
       { label: "1kg", price: 525, pricel: 600, inStock: true },
     ],
   }
