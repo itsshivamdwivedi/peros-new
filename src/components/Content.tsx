@@ -320,7 +320,7 @@ const Content = () => {
         At Peros, we believe that great health starts with great ingredients. Our premium peanut butter is made from the finest handpicked peanuts found only in the southern part of Asia, ensuring an unmatched taste and nutrition in every spoonful.
       </p>
       <p className="text-lg md:text-xl leading-relaxed text-white">
-        We sourced the finest premium peanuts from the southen parts of Asia, known  for their superior flavor and nutrient profile. After months of research, testing, and refining, Peros Peanut Butter was created
+        We sourced the finest premium peanuts from the southern parts of Asia, known  for their superior flavor and nutrient profile. After months of research, testing, and refining, Peros Peanut Butter was created
       </p>
       <p className="text-lg md:text-xl leading-relaxed text-white">
        A brand that offers purity, taste, and high protein content without any artificial additives.
