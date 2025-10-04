@@ -312,15 +312,25 @@ const updateProductStock = async (
                         <span className="font-medium font-serif">Gross Total :</span> {order.mrpTotal|| "N/A"}
                       </p>
                       <p className="text-sm text-gray-600 mb-2">
-                        <span className="font-medium font-serif">Net Total :</span> {order.subtotal|| "N/A"}
+                        <span className="font-medium font-serif">Total Payable :</span> {order.totalPayable|| "N/A"}
                       </p>
                       <p className="text-sm text-gray-600 mb-2">
-                        <span className="font-medium">Date:</span>{" "}
-                        {order.timestamp?.toLocaleDateString()} at{" "}
-                        {order.timestamp?.toLocaleTimeString()}
-                      
-                        
+                       
+                         {Array.isArray(order.cart) &&
+  order.cart.map((product: any, productIndex: number) => (
+    <li key={productIndex}>{/* Render product properties */}
+    <div className="flex flex-row justify-between self-center content-center items-center"><div> <img className="w-20 h-20 object-cover rounded-lg xl:object-cover xl:w-[50wh] xl:h-[20vh]" src={product.image || "Unknown Product"} alt="" /></div>
+    <div><span className="font-medium">{product.title || "Unknown Product"}</span></div>
+    </div>
+    <div className="flex flex-row justify-between self-center content-center items-center"><div>  Quantity:
+    (x{product.quantity})</div>
+    <div><span className="font-medium">  ₹{product.price} - <span className="text-red-400">₹{product.pricel}</span> </span></div>
+    </div>
+    
+    </li>
+  ))}
                       </p>
+                     
                       <p className="text-sm text-gray-600 mb-2">
                         <span className="font-medium font-serif">Status:</span> {order.status || "Pending"}
                       </p>

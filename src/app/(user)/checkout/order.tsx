@@ -307,7 +307,7 @@ const Orders = () => {
 
                   <div className="flex flex-row justify-between self-center content-center items-center mt-2">
                     <div className="text-md font-semibold text-gray-800 mt-4 font-serif"> Total: </div>
-                  <div className="text-md font-semibold text-green-600 mt-2">₹{subtotal} </div></div>
+                  <div className="text-md font-semibold text-green-600 mt-2">₹{order.totalPayable} </div></div>
                   <div className="flex flex-row justify-between self-center content-center items-center">
                     <div className="text-md font-semibold text-gray-800 mt-4 font-serif"> Total Savings :</div>
                   <div className="text-md font-semibold text-green-600 mt-2">₹{mrpTotal - subtotal}</div></div>
