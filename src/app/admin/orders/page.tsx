@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, collectionGroup, deleteDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, collectionGroup, deleteDoc, getDoc,Timestamp } from "firebase/firestore";
 import { useStock } from "@/contexts/StockContext";
 
 
@@ -39,29 +39,49 @@ const [loadingReviews, setLoadingReviews] = useState(true);
     fetchAllOrders();
   }, []);
 
-  const fetchAllOrders = async () => {
-    try {
-      setLoading(true);
-      const usersSnapshot = await getDocs(collection(db, "users"));
-      const groupedOrders: Record<string, UserData> = {};  // This will ensure 'userId' is a string and maps to UserData
 
-      usersSnapshot.forEach((doc) => {
-        const userData = doc.data();
-        const userEmail = userData?.orders?.[0]?.userEmail || "Email not provided";
 
-        groupedOrders[doc.id] = {
-          email: userEmail,
-          orders: userData?.orders || [],
-        };
-      });
+const fetchAllOrders = async () => {
+  try {
+    setLoading(true);
 
-      setOrdersByUser(groupedOrders);
-    } catch (err) {
-      setError("Error fetching orders.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    const usersSnapshot = await getDocs(collection(db, "users"));
+    const groupedOrders: Record<string, UserData> = {};
+
+    usersSnapshot.forEach((docSnap) => {
+      const userData = docSnap.data();
+      const rawOrders = userData?.orders || [];
+
+      // Convert createdAt to Date for each order
+      const formattedOrders = rawOrders.map((order: any) => ({
+        ...order,
+        timestamp:
+          order.createdAt instanceof Timestamp
+            ? order.createdAt.toDate()
+            : new Date(order.createdAt),
+      }));
+
+      // Sort newest first
+      formattedOrders.sort((a: any, b: any) => b.timestamp - a.timestamp);
+
+      const userEmail = formattedOrders[0]?.userEmail || "Email not provided";
+
+      groupedOrders[docSnap.id] = {
+        email: userEmail,
+        orders: formattedOrders,
+      };
+    });
+
+    setOrdersByUser(groupedOrders);
+  } catch (err) {
+    console.error(err);
+    setError("Error fetching orders.");
+  } finally {
+    setLoading(false);
+  }
+};
+  
+
 const [productsData, setProductsData] = useState<Record<string, any>>({});
 
 useEffect(() => {
@@ -311,6 +331,13 @@ const updateProductStock = async (
                       <p className="text-sm text-gray-600 mb-2">
                         <span className="font-medium font-serif">Gross Total :</span> {order.mrpTotal|| "N/A"}
                       </p>
+                       <p className="text-sm text-green-300 mb-4">
+                    <span className="font-medium">Date:</span>{" "}
+                    {order.timestamp.toLocaleDateString()} at{" "}
+                    {order.timestamp.toLocaleTimeString()}
+                   
+             
+                  </p>
                       <p className="text-sm text-gray-600 mb-2">
                         <span className="font-medium font-serif">Total Payable :</span> {order.totalPayable|| "N/A"}
                       </p>
