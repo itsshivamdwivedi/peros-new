@@ -5,6 +5,8 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, onSnapshot, Timestamp } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { jsPDF } from "jspdf";
+import ShipmentTracker from "@/components/ShipmentTracker";
+import Link from "next/link";
 
 // import LogoutButton from "@/components/LogoutButton";
 
@@ -248,6 +250,17 @@ const Orders = () => {
                   <p className="text-sm text-gray-600 mb-4">
                     <span className="font-medium font-serif">Transaction ID :</span>{" "}
                     {order.razorpayPaymentId || "N/A"}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-4">
+                  
+                  <Link href="/Track">
+    <button
+      className="w-full md:w-[18vw] text-sm bg-green-600 text-white px-4 py-2 rounded-md font-semibold ring-1 ring-green-500 hover:bg-amber-400 hover:text-white disabled:bg-pink-200 disabled:text-white disabled:ring-none disabled:cursor-not-allowed"
+    
+    >
+      Track
+    </button>
+  </Link>
                   </p>
                   <p className="text-sm text-gray-600 mb-4">
                     <span className="font-medium font-serif">Payment Method :</span>{" "}

@@ -20,6 +20,7 @@ export default function Page(){
           
             
             <Orders/>
+            
            <div className="mt-10"> <Footer/></div>
         </main>
     )
