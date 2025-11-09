@@ -51,7 +51,7 @@ export async function POST(request: Request) {
             phone: `+91${address.phone.replace(/\D/g, "").slice(-10)}`,
             payment_mode: "COD",
             country: "India",
-            quantity: cart.reduce((sum:any, item:any) => sum + item.quantity, 1),
+            quantity: cart.reduce((sum:any, item:any) => sum + item.quantity, 0),
             product_type: "Non-Dangerous"
           }
         ]
