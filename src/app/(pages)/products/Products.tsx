@@ -541,7 +541,7 @@ useEffect(() => {
     </div>
    
 
-<div className="flex flex-col items-center px-4 py-10 md:px-20 sm:mt-40  sm:z-10 md:mt-[55vw]">
+<div className="flex flex-col items-center px-4 py-10 md:px-20 sm:mt-40 xl:relative xl:z-30    sm:z-10 md:mt-[55vw]">
       <h2 className="text-2xl md:text-2xl font-bold text-center px-6 ">
         Satisfy Your Chocolate Craving Without Guilt!
       </h2>
@@ -551,7 +551,7 @@ useEffect(() => {
       </p>
       
       {/* Image Section */}
-      <div className="w-full flex justify-center mt-6">
+      <div className="w-full xl:z-30 flex justify-center mt-6">
         <img 
           src="/assets/comparsion-02.jpg" 
           alt="Comparison" 
@@ -584,7 +584,7 @@ Switch today and snack smarter!
       </div> */}
       
       {/* Nutritional Information Image */}
-      <div className="relative mt-10 md:mt-44 w-full max-w-lg pb-52  ">
+      <div className="relative mt-10 md:mt-44 xl:mt-52 w-full max-w-lg pb-52  ">
         <Image
           src="/assets/we serve-02.png"
           alt="Nutritional Information"

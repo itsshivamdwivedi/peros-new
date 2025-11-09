@@ -54,7 +54,7 @@ const AdminOrders = () => {
       setLoadingOrders(true);
 
       const usersSnapshot = await getDocs(collection(db, "users"));
-     const orders: Order[] = [];
+    const orders: Order[] = [];
 
       usersSnapshot.forEach((userDoc) => {
         const userId = userDoc.id;

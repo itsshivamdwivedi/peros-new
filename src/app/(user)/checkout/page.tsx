@@ -1053,6 +1053,7 @@ const Checkout = () => {
               address: paymentDetails.address,
               cart: paymentDetails.cart,
               orderId: paymentDetails.orderId,
+              paymentMethod: paymentDetails.paymentMethod,
             }),
           });
         } catch (error) {
@@ -1264,7 +1265,7 @@ const Checkout = () => {
         await fetch("/api/create-shipment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address, cart, orderId }),
+          body: JSON.stringify({ address, cart, orderId , paymentMethod: "COD",}),
         });
 
         storePaymentDetails(paymentDetails);
