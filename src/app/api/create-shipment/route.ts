@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 interface CartItem {
   id: string;
-  name?: string;      // some of your cart items use `title`
-  title?: string;     // so we support both
+  name?: string;
+  title?: string;
   quantity: number;
   price: number;
 }
@@ -24,8 +24,6 @@ export async function POST(request: Request) {
     console.log("🟢 /api/create-shipment hit");
 
     const raw = await request.text();
-    console.log("📩 RAW BODY:", raw);
-
     const { address, cart, orderId, paymentMethod } = JSON.parse(raw) as {
       address: Address;
       cart: CartItem[];
@@ -33,40 +31,27 @@ export async function POST(request: Request) {
       paymentMethod: string;
     };
 
-    console.log("✅ Parsed address/cart/order:", { address, cart, orderId });
-
     if (!process.env.DELHIVERY_API_KEY) {
-      console.error("❌ Missing DELHIVERY_API_KEY");
-      return NextResponse.json(
-        { error: "API Key missing" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "API Key missing" }, { status: 500 });
     }
 
-    const apiUrl = new URL("https://track.delhivery.com/api/cmu/create.json");
-    apiUrl.searchParams.set("format", "json");
+    const apiUrl = "https://track.delhivery.com/api/cmu/create.json";
 
+    // Calculate total amount and quantity
     const totalAmount = cart
       .reduce((sum, item) => sum + item.price * item.quantity, 0)
       .toFixed(2);
 
-    // ✅ Your products sometimes use "title" instead of "name"
+    const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+
     const firstItem = cart[0];
     const productName = firstItem.name || firstItem.title || "Product";
 
     const productDetails = cart
-      .map((item) => {
-        const name = item.name || item.title || "Item";
-        return `${name} x ${item.quantity}`;
-      })
+      .map((item) => `${item.name || item.title || "Item"} x ${item.quantity}`)
       .join(", ");
 
-    const totalQuantity = cart.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
-
-    // ✅ Delhivery requires these fields for correct label
+    // Construct shipment payload
     const payload = {
       pickup_location: {
         name: "Peros",
@@ -77,49 +62,35 @@ export async function POST(request: Request) {
         phone: "7715889772",
         pin: "421306",
       },
-
-     shipments: [
-  {
-    order: orderId,
-
-    // ✅ Ship To name (customer)
-    name: `${address.firstName} ${address.lastName}`.trim(),
-
-    // ✅ Product displayed on label
-    products_desc: productName,
-    product_details: productDetails,
-    sku: firstItem.id,
-    hsn_code: "330499",
-
-    total_amount: totalAmount,
-    cod_amount: paymentMethod === "COD" ? totalAmount : "0.00",
-    payment_mode: paymentMethod === "COD" ? "COD" : "Prepaid",
-
-    order_date: new Date().toISOString(),
-
-    add: address.address,
-    city: address.city || "City",
-    state: address.state,
-    pin: address.pincode,
-    phone: `+91${address.phone.replace(/\D/g, "").slice(-10)}`,
-    country: "India",
-
-    quantity: totalQuantity,
-    product_type: "Non-Dangerous",
-  },
-]
-
+      shipments: [
+        {
+          order: orderId,
+          name: `${address.firstName} ${address.lastName}`.trim(),
+          products_desc: productName,
+          product_details: productDetails,
+          sku: firstItem.id,
+          hsn_code: "330499",
+          total_amount: totalAmount,
+          cod_amount: paymentMethod === "COD" ? totalAmount : "0.00",
+          payment_mode: paymentMethod === "COD" ? "COD" : "Prepaid",
+          order_date: new Date().toISOString(),
+          add: address.address,
+          city: address.city || "City",
+          state: address.state,
+          pin: address.pincode,
+          phone: `+91${address.phone.replace(/\D/g, "").slice(-10)}`,
+          country: "India",
+          quantity: totalQuantity,
+          product_type: "Non-Dangerous",
+        },
+      ],
     };
-
-    console.log("📦 FINAL PAYLOAD:", JSON.stringify(payload, null, 2));
 
     const formData = new URLSearchParams();
     formData.append("format", "json");
     formData.append("data", JSON.stringify(payload));
 
-    console.log("📤 FORMDATA SENT:", formData.toString());
-
-    const delhiveryRes = await fetch(apiUrl.toString(), {
+    const delhiveryRes = await fetch(apiUrl, {
       method: "POST",
       headers: {
         Authorization: `Token ${process.env.DELHIVERY_API_KEY}`,
@@ -128,11 +99,7 @@ export async function POST(request: Request) {
       body: formData.toString(),
     });
 
-    console.log("📥 DELHIVERY STATUS:", delhiveryRes.status);
-
     const text = await delhiveryRes.text();
-    console.log("📥 RAW RESPONSE TEXT:", text);
-
     let responseData: any = {};
 
     try {
@@ -141,28 +108,32 @@ export async function POST(request: Request) {
       console.error("❌ JSON PARSE FAILED:", err);
     }
 
-    console.log("🚚 PARSED RESPONSE:", responseData);
-
-    // ✅ Safer TS-friendly failure detection
     const failed =
       !!responseData.error ||
       (Array.isArray(responseData.packages) &&
         responseData.packages.some((p: any) => p.status !== "Success"));
 
     if (failed) {
-      console.error("❌ Shipment failure:", responseData);
       return NextResponse.json(
         { error: "Shipment creation failed", details: responseData },
         { status: 500 }
       );
     }
 
+    // Grab wbns and waybill from first package
+    const wbns = responseData.packages?.[0]?.wbns || null;
+    const waybill = responseData.packages?.[0]?.waybill || null;
+
+
+    console.log("🚚 Shipment created. Waybill:", waybill, "WBNS:", wbns);
+
     return NextResponse.json({
       success: true,
       message: "Shipment created successfully",
+      waybill,
+      wbns,
       details: responseData,
     });
-
   } catch (error: any) {
     console.error("🔥 FATAL ERROR:", error);
     return NextResponse.json(

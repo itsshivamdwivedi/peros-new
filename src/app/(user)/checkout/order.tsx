@@ -117,35 +117,59 @@ const Orders = () => {
       console.error("Error requesting return:", err);
     }
   };
+  const handleDownloadInvoice = async (order: any) => {
+  if (!order.waybill) {
+    alert("No waybill assigned yet.");
+    return;
+  }
 
-  const handleDownloadInvoice = (order: any) => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Invoice", 20, 20);
+  const res = await fetch(`/api/get-label?waybill=${order.waybill}`);
 
-    // Add order details
-    doc.setFontSize(12);
-    doc.text(`Order ID: ${order.orderId || "N/A"}`, 20, 40);
-    doc.text(`Date: ${order.timestamp.toLocaleDateString()}`, 20, 50);
-    doc.text(`Status: ${order.status}`, 20, 60);
+  if (!res.ok) {
+    alert("Failed to fetch invoice from Delhivery");
+    return;
+  }
 
-    // Add product details
-    doc.text("Products:", 20, 80);
-    order.cart.forEach((product: any, index: number) => {
-      doc.text(
-        `${index + 1}. ${product.id} - Quantity: ${product.quantity}, Price: ₹${product.price}`,
-        20,
-        90 + index * 10
-      );
-    });
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
 
-    // Add totals
-    doc.text(`Subtotal: ${order.subtotal}`, 20, 140);
-    doc.text(`Total Savings: ${order.mrpTotal - order.subtotal}`, 20, 150);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Shipment_${order.waybill}.pdf`;
+  a.click();
 
-    // Save the PDF
-    doc.save(`Invoice_${order.orderId}.pdf`);
-  };
+  window.URL.revokeObjectURL(url);
+};
+
+
+  // const handleDownloadInvoice = (order: any) => {
+  //   const doc = new jsPDF();
+  //   doc.setFontSize(16);
+  //   doc.text("Invoice", 20, 20);
+
+  //   // Add order details
+  //   doc.setFontSize(12);
+  //   doc.text(`Order ID: ${order.orderId || "N/A"}`, 20, 40);
+  //   doc.text(`Date: ${order.timestamp.toLocaleDateString()}`, 20, 50);
+  //   doc.text(`Status: ${order.status}`, 20, 60);
+
+  //   // Add product details
+  //   doc.text("Products:", 20, 80);
+  //   order.cart.forEach((product: any, index: number) => {
+  //     doc.text(
+  //       `${index + 1}. ${product.id} - Quantity: ${product.quantity}, Price: ₹${product.price}`,
+  //       20,
+  //       90 + index * 10
+  //     );
+  //   });
+
+  //   // Add totals
+  //   doc.text(`Subtotal: ${order.subtotal}`, 20, 140);
+  //   doc.text(`Total Savings: ${order.mrpTotal - order.subtotal}`, 20, 150);
+
+  //   // Save the PDF
+  //   doc.save(`Invoice_${order.orderId}.pdf`);
+  // };
 
   // // Admin Approval and Cancellation of Return Request
   // const handleAdminApproval = async (orderId: string, approve: boolean) => {
@@ -251,7 +275,7 @@ const Orders = () => {
                   </p>
 
                   {/* Return Request Section */}
-                  {order.status === "Delivered" && order.status !== "Return Requested" && (
+                  {/* {order.status === "Delivered" && order.status !== "Return Requested" && (
                     <div className="flex gap-2"><button
                     onClick={() => handleReturnRequest(order.orderId)}
                     className="mt-4 px-4 py-2 bg-blue-500 text-white rounded shadow hover:bg-blue-600"
@@ -260,7 +284,7 @@ const Orders = () => {
                   </button>
                   
                   </div>
-                  )}
+                  )} */}
 
 
 {order.status === "Delivered" &&(

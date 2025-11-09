@@ -884,6 +884,7 @@ type PaymentDetails = {
   subtotal: number;
   mrpTotal: number;
   userEmail: string;
+   waybill?: string | null;
   status: PaymentStatus;
   totalPayable: number;
   extraCharges?: number; // Added extraCharges for COD
@@ -1087,6 +1088,42 @@ const Checkout = () => {
     : DELIVERY_CHARGE;
   const totalPayable = subtotal + extraCharges;
 
+
+  const createShipmentAndGetWaybill = async (
+  address: any,
+  cart: any,
+  orderId: any,
+  paymentMethod: any
+) => {
+  try {
+    const res = await fetch("/api/create-shipment", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address, cart, orderId, paymentMethod }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      console.error("❌ Shipment failed:", data);
+      return null;
+    }
+
+    const waybill =
+      data.waybill ||
+      data.details?.packages?.[0]?.waybill ||
+      null;
+
+    console.log("✅ WAYBILL RECEIVED:", waybill);
+
+    return waybill;
+  } catch (err) {
+    console.error("❌ Shipment Error:", err);
+    return null;
+  }
+};
+
+
   useEffect(() => {
     // Load Razorpay SDK
     const script = document.createElement("script");
@@ -1122,42 +1159,44 @@ const Checkout = () => {
     return `ORD-${timestamp}-${randomStr}`;
   };
 
-  const storePaymentDetails = async (paymentDetails: PaymentDetails) => {
-    if (
-      !paymentDetails.orderId ||
-      !paymentDetails.paymentMethod ||
-      !paymentDetails.address ||
-      !paymentDetails.cart ||
-      !paymentDetails.subtotal ||
-      !paymentDetails.mrpTotal
-    ) {
-      console.error("Incomplete payment details:", paymentDetails);
-      return;
-    }
+ const storePaymentDetails = async (paymentDetails: PaymentDetails) => {
+  if (
+    !paymentDetails.orderId ||
+    !paymentDetails.paymentMethod ||
+    !paymentDetails.address ||
+    !paymentDetails.cart ||
+    !paymentDetails.subtotal ||
+    !paymentDetails.mrpTotal
+  ) {
+    console.error("Incomplete payment details:", paymentDetails);
+    return;
+  }
 
-    try {
-      const userRef = doc(db, `users/${user.uid}`);
+  try {
+    const userRef = doc(db, `users/${user.uid}`);
 
-      await setDoc(
-        userRef,
-        {
-          orders: arrayUnion({
-            ...paymentDetails,
-            extraCharges: paymentMethod === "COD" ? extraCharges : 0,
-            totalAmount: paymentMethod === "COD" ? totalPayable : subtotal,
-            createdAt: Timestamp.now(),
-          }),
-          cart: [],
-        },
-        { merge: true }
-      );
+    await setDoc(
+      userRef,
+      {
+        orders: arrayUnion({
+          ...paymentDetails,
+          waybill: paymentDetails.waybill || null, // ✅ save waybill
+          extraCharges: paymentMethod === "COD" ? extraCharges : 0,
+          totalAmount: paymentMethod === "COD" ? totalPayable : subtotal,
+          createdAt: Timestamp.now(),
+        }),
+        cart: [],
+      },
+      { merge: true }
+    );
 
-      setPaymentDetails(paymentDetails);
-      setShowPopup(true);
-    } catch (error) {
-      console.error("Error storing payment details:", error);
-    }
-  };
+    setPaymentDetails(paymentDetails);
+    setShowPopup(true);
+  } catch (error) {
+    console.error("Error storing payment details:", error);
+  }
+};
+
 
   const handlePayment = async () => {
     if (cart.length === 0) {
@@ -1262,13 +1301,19 @@ const Checkout = () => {
           totalAmount: totalPayable,
         };
 
-        await fetch("/api/create-shipment", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address, cart, orderId , paymentMethod: "COD",}),
-        });
+       // ✅ First create shipment & get waybill
+const waybill = await createShipmentAndGetWaybill(address, cart, orderId, "COD");
 
-        storePaymentDetails(paymentDetails);
+const paymentDetailsWithWaybill = {
+  ...paymentDetails,
+  waybill: waybill || null,
+};
+
+// Save to Firestore
+await storePaymentDetails(paymentDetailsWithWaybill);
+
+
+
       }
     } catch (error) {
       console.error("Payment failed:", error);
