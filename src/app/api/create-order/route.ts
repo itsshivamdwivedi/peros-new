@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
     );
 
     const { access_token } = tokenRes.data;
-    console.log("🔐 OAuth Access Token received");
+    console.log("🔐 OAuth Access Token:", access_token) ;
 
     // 💳 Step 2: Create Payment
     const paymentPayload = {
@@ -274,9 +274,9 @@ export async function POST(req: NextRequest) {
 //   console.log("===========================\n STEP 1: Requesting OAuth Token\n===========================");
 
 //   try {
-//     const { CLIENT_ID, CLIENT_SECRET, CLIENT_VERSION, ENV_URL, REDIRECT_URL } = process.env;
+//     const { CLIENT_ID, CLIENT_SECRET, CLIENT_VERSION, PG_URL, REDIRECT_URL } = process.env;
 
-//     if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !ENV_URL || !REDIRECT_URL) {
+//     if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !PG_URL || !REDIRECT_URL) {
 //       console.error("Missing environment variables");
 //       return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
 //     }
@@ -301,7 +301,7 @@ export async function POST(req: NextRequest) {
 
 //     console.log("📤 OAuth Request Payload:", Object.fromEntries(tokenForm.entries()));
 
-//     const tokenRes = await axios.post(`${ENV_URL}/v1/oauth/token`, tokenForm.toString(), {
+//     const tokenRes = await axios.post(`${PG_URL}/v1/oauth/token`, tokenForm.toString(), {
 //       headers: { "Content-Type": "application/x-www-form-urlencoded" },
 //     });
 
@@ -331,7 +331,7 @@ export async function POST(req: NextRequest) {
 
 //     console.log("📤 Pay API JSON Body:", payPayload);
 
-//     const payRes = await axios.post(`${ENV_URL}/checkout/v2/pay`, payPayload, {
+//     const payRes = await axios.post(`${PG_URL}/checkout/v2/pay`, payPayload, {
 //       headers: {
 //         "Content-Type": "application/json",
 //         Authorization: `O-Bearer ${accessToken}`,

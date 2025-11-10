@@ -874,7 +874,7 @@ interface CartItem {
   pricel: number;
 }
 
-type PaymentStatus = "COMPLETED" | "FAILED" | "PENDING" | "UNKNOWN";
+type PaymentStatus = "Order Created" | "FAILED" | "PENDING" | "UNKNOWN";
 type PaymentDetails = {
   orderId: string;
   paymentMethod: "COD" | "PhonePe"; // specify the possible values for paymentMethod
@@ -957,6 +957,21 @@ const Checkout = () => {
     document.body.style.overflow = "auto";
   }, []);
 
+  const mapPhonePeStateToPaymentStatus = (state?: string, errorCode?: string): PaymentStatus => {
+  console.log("💡 PhonePe mapping - Input state:", state, "ErrorCode:", errorCode);
+
+  if (!state) return "PENDING";
+
+  const normalized = state.toUpperCase();
+  if (normalized === "SUCCESS") return "Order Created"; // or "COMPLETED"
+  if (normalized === "FAILED" || normalized === "TXN_CANCELLED") return "FAILED";
+  if (normalized === "PENDING") return "PENDING";
+  if (errorCode === "TXN_CANCELLED") return "FAILED";
+
+  return "UNKNOWN";
+};
+
+
   useEffect(() => {
     if (!user) {
       router.push("/login"); // Redirect to login page if user is not logged in
@@ -966,50 +981,79 @@ const Checkout = () => {
   const hasVerified = useRef(false);
 
   useEffect(() => {
-  const verifyFromLocalStorage = async () => {
-    const savedData = localStorage.getItem("checkoutData");
-    if (!savedData) return;
+    const verifyFromLocalStorage = async () => {
+      if (hasVerified.current) return;
 
-    const { transactionId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
+      const savedData = localStorage.getItem("checkoutData");
+      if (!savedData) return;
 
-    let attempts = 0;
-    const maxAttempts = 20; // stop after 20 tries (~10 minutes)
+      const { transactionId, phonePeOrderId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
 
-    const interval = setInterval(async () => {
-      attempts++;
+      if (!transactionId) return;
+      hasVerified.current = true;
       try {
         const verifyRes = await fetch(`/api/verify-payment?transactionId=${transactionId}`);
         const result = await verifyRes.json();
-        const paymentStatus = result?.data?.state || "UNKNOWN";
 
-        if (paymentStatus === "COMPLETED" || paymentStatus === "FAILED") {
-          const updatedPaymentDetails: PaymentDetails = {
-            orderId: transactionId,
-            paymentMethod: "PhonePe",
-            razorpayPaymentId: transactionId,
-            address,
-            cart,
-            subtotal,
-            totalPayable: subtotal, 
-            mrpTotal,
-            userEmail,
-            status: paymentStatus,
+        const paymentStatus = mapPhonePeStateToPaymentStatus(result?.state, result?.errorCode);
+
+
+        const basePaymentDetails: PaymentDetails = {
+          orderId: transactionId,
+          paymentMethod: "PhonePe",
+          razorpayPaymentId: transactionId,
+          address,
+          cart,
+          subtotal,
+          totalPayable,
+          mrpTotal,
+          userEmail,
+          status: paymentStatus,
+        };
+
+        let updatedPaymentDetails: PaymentDetails;
+
+        if (paymentStatus === "Order Created") {
+          updatedPaymentDetails = {
+            ...basePaymentDetails,
+            status: "Order Created",
           };
-          setPaymentDetails(updatedPaymentDetails);
-          setShowPopup(true);
-          localStorage.removeItem("checkoutData");
-          clearInterval(interval);
-        } else if (attempts >= maxAttempts) {
-          clearInterval(interval);
+          await storePaymentDetails(updatedPaymentDetails);
+        } else if (paymentStatus === "FAILED") {
+          updatedPaymentDetails = { ...basePaymentDetails, status: "FAILED" };
+        } else {
+          updatedPaymentDetails = { ...basePaymentDetails, status: "PENDING" };
         }
+
+        setPaymentDetails(updatedPaymentDetails);
+        setShowPopup(true);
+        localStorage.removeItem("checkoutData"); // ✅ Clear after showing popup
       } catch (error) {
         console.error("❌ Error verifying payment:", error);
+        setPaymentDetails({
+          orderId: "",
+          paymentMethod: "PhonePe",
+          address: {
+            firstName: "",
+            lastName: "",
+            phone: "",
+            email: "",
+            address: "",
+            state: "",
+            pincode: "",
+          },
+          cart: [],
+          subtotal: 0,
+          mrpTotal: 0,
+          userEmail: "",
+          status: "FAILED",
+        });
+        setShowPopup(true);
+        localStorage.removeItem("checkoutData"); // ✅ Also clear on catch
       }
-    }, 30000); // poll every 30 seconds
-  };
-
-  verifyFromLocalStorage();
-}, []);
+    };
+    verifyFromLocalStorage();
+  }, []);
 
   useEffect(() => {
     if (
@@ -1268,7 +1312,7 @@ const Checkout = () => {
           totalPayable,
           mrpTotal,
           userEmail: user.email,
-          status: "COMPLETED",
+          status: "Order Created",
           extraCharges,
           totalAmount: totalPayable,
         };
@@ -1552,7 +1596,7 @@ await storePaymentDetails(paymentDetailsWithWaybill);
             </div>
           )}
 
-          {paymentDetails?.status === "COMPLETED" && (
+          {paymentDetails?.status === "Order Created" && (
             <div className=" fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50">
               <div className="bg-white p-6 rounded-md shadow-lg">
                 <h2 className="text-xl font-semibold mb-4 font-serif">
