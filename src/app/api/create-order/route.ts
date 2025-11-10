@@ -250,3 +250,118 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import axios from "axios";
+// import { NextRequest, NextResponse } from "next/server";
+
+// export async function POST(req: NextRequest) {
+//   console.log("===========================\n STEP 1: Requesting OAuth Token\n===========================");
+
+//   try {
+//     const { CLIENT_ID, CLIENT_SECRET, CLIENT_VERSION, ENV_URL, REDIRECT_URL } = process.env;
+
+//     if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !ENV_URL || !REDIRECT_URL) {
+//       console.error("Missing environment variables");
+//       return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+//     }
+
+//     const body = await req.json();
+//     const { orderId, amount } = body;
+
+//     if (!amount || amount <= 0) {
+//       return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+//     }
+
+//     const txnId = orderId || `txn_${Date.now()}`;
+
+//     // -------------------------------
+//     // STEP 1: Get OAuth token
+//     // -------------------------------
+//     const tokenForm = new URLSearchParams();
+//     tokenForm.append("grant_type", "client_credentials");
+//     tokenForm.append("client_id", CLIENT_ID);
+//     tokenForm.append("client_secret", CLIENT_SECRET);
+//     tokenForm.append("client_version", CLIENT_VERSION);
+
+//     console.log("📤 OAuth Request Payload:", Object.fromEntries(tokenForm.entries()));
+
+//     const tokenRes = await axios.post(`${ENV_URL}/v1/oauth/token`, tokenForm.toString(), {
+//       headers: { "Content-Type": "application/x-www-form-urlencoded" },
+//     });
+
+//     const accessToken = tokenRes.data?.access_token;
+//     if (!accessToken) {
+//       console.error("❌ No access token received:", tokenRes.data);
+//       return NextResponse.json({ error: "Auth failed" }, { status: 502 });
+//     }
+
+//     console.log("✅ OAuth Response:", tokenRes.data);
+//     console.log("✅ JWT Token for /pay:", accessToken);
+
+//     // -------------------------------
+//     // STEP 2: Call /checkout/v2/pay (JSON body)
+//     // -------------------------------
+//     console.log("\n===========================\n STEP 2: Calling /checkout/v2/pay\n===========================");
+
+//     const payPayload = {
+//       token: accessToken,
+//       merchantOrderId: txnId,
+//       amount: amount,
+//       paymentFlow: {
+//         type: "PG_CHECKOUT",
+//         merchantUrls: { redirectUrl: REDIRECT_URL },
+//       },
+//     };
+
+//     console.log("📤 Pay API JSON Body:", payPayload);
+
+//     const payRes = await axios.post(`${ENV_URL}/checkout/v2/pay`, payPayload, {
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `O-Bearer ${accessToken}`,
+//       },
+//     });
+
+//     console.log("✅ /pay Response:", payRes.data);
+
+//     const redirectUrl =
+//       payRes.data?.redirectUrl ||
+//       payRes.data?.data?.redirectUrl ||
+//       payRes.data?.instrumentResponse?.redirectInfo?.url ||
+//       REDIRECT_URL;
+
+//     console.log("💻 Final Redirect URL:", redirectUrl);
+
+//     return NextResponse.json({
+//       success: true,
+//       transactionId: txnId,
+//       url: redirectUrl,
+//       rawResponse: payRes.data,
+//     });
+//   } catch (err: any) {
+//     console.error("❌ FINAL ERROR:", err.response?.data || err.message);
+//     return NextResponse.json(
+//       {
+//         success: false,
+//         error: err.response?.data || err.message,
+//       },
+//       { status: 500 }
+//     );
+//   }
+// }
