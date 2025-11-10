@@ -985,19 +985,24 @@ const Checkout = () => {
 
         const result = await verifyRes.json();
 
-        const paymentCode = result?.code;
+    const code = result?.code;
+const state = result?.state;
+const success = result?.success;
 
-let paymentStatus: PaymentStatus;
+let paymentStatus: PaymentStatus = "UNKNOWN";
 
-if (paymentCode === "PAYMENT_SUCCESS") {
-  paymentStatus = "Order Created"; // ✅ SUCCESS
-} else if (paymentCode === "PAYMENT_PENDING") {
+if (code === "PAYMENT_SUCCESS" || state === "COMPLETED" || success === true) {
+  paymentStatus = "Order Created";
+} else if (code === "PAYMENT_PENDING" || state === "PENDING") {
   paymentStatus = "PENDING";
-} else if (paymentCode === "PAYMENT_ERROR" || paymentCode === "PAYMENT_FAILED") {
+} else if (
+  code === "PAYMENT_ERROR" ||
+  code === "PAYMENT_FAILED" ||
+  state === "FAILED"
+) {
   paymentStatus = "FAILED";
-} else {
-  paymentStatus = "UNKNOWN";
 }
+
 
 
         const basePaymentDetails: PaymentDetails = {
