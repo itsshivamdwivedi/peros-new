@@ -92,7 +92,6 @@
 //     );
 //   }
 // }
-
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -114,8 +113,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    console.log("===========================\n STEP 1: Requesting OAuth Token\n===========================");
+    console.log("\n===========================\n STEP 1: Requesting OAuth Token\n===========================");
 
+    // Step 1: Get OAuth token
     const tokenForm = new URLSearchParams();
     tokenForm.append("grant_type", "client_credentials");
     tokenForm.append("client_id", CLIENT_ID);
@@ -137,8 +137,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to get access token" }, { status: 502 });
     }
 
-    console.log("===========================\n STEP 2: Getting Payment Status\n===========================");
+    console.log("\n===========================\n STEP 2: Getting Payment Status\n===========================");
 
+    // Step 2: Get Payment Status
     const statusRes = await axios.get(`${ENV_URL}/checkout/v2/order/${transactionId}/status`, {
       headers: {
         "Content-Type": "application/json",
@@ -150,21 +151,50 @@ export async function POST(req: NextRequest) {
     console.log("✅ PhonePe Status Response:", JSON.stringify(responseData, null, 2));
 
     // Normalize status
-    let paymentStatus = "UNKNOWN";
+    let paymentStatus: "SUCCESS" | "PENDING" | "FAILED" | "UNKNOWN" = "UNKNOWN";
+
     const code = responseData?.code;
     const state = responseData?.state;
     const success = responseData?.success;
 
-    if (code === "PAYMENT_SUCCESS" || state === "COMPLETED" || success === true) paymentStatus = "SUCCESS";
-    else if (code === "PAYMENT_PENDING" || state === "PENDING") paymentStatus = "PENDING";
-    else if (code === "PAYMENT_FAILED" || code === "PAYMENT_ERROR" || state === "FAILED") paymentStatus = "FAILED";
+    if (
+      code === "PAYMENT_SUCCESS" ||    // Production success
+      code === "SUCCESS" ||            // UAT success
+      state === "COMPLETED" ||         // Production success
+      state === "SUCCESS" ||           // UAT success
+      success === true
+    ) {
+      paymentStatus = "SUCCESS";
+    } else if (
+      code === "PAYMENT_PENDING" ||
+      code === "PENDING" ||
+      state === "PENDING"
+    ) {
+      paymentStatus = "PENDING";
+    } else if (
+      code === "PAYMENT_FAILED" ||
+      code === "PAYMENT_ERROR" ||
+      code === "FAILED" ||            // UAT failure
+      state === "FAILED"
+    ) {
+      paymentStatus = "FAILED";
+    }
 
-    return NextResponse.json({ success, code, state, status: paymentStatus, data: responseData });
-
+    // Return normalized response
+    return NextResponse.json({
+      success,
+      code,
+      state,
+      status: paymentStatus,
+      data: responseData,
+    });
   } catch (err: any) {
     console.error("❌ Verification error:", err?.response?.data || err.message);
     return NextResponse.json(
-      { error: "Verification failed", details: err?.response?.data || err?.message },
+      {
+        error: "Verification failed",
+        details: err?.response?.data || err?.message,
+      },
       { status: 500 }
     );
   }
