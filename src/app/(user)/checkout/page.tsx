@@ -913,7 +913,7 @@ const Checkout = () => {
   ); // Added payment method
 
   const COD_HANDLING_CHARGE = 10;
-  const DELIVERY_CHARGE = 40;
+  const DELIVERY_CHARGE = 0;
 
   const [address, setAddress] = useState<AddressDetails>({
     firstName: "",
