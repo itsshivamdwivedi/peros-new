@@ -963,50 +963,81 @@ const Checkout = () => {
     }
   }, [user, router]);
 
- const hasVerified = useRef(false);
+  const hasVerified = useRef(false);
 
-useEffect(() => {
-  const verifyPayment = async () => {
-    let transactionId = searchParams.get('transactionId');
+  useEffect(() => {
+    const verifyFromLocalStorage = async () => {
+      if (hasVerified.current) return;
 
-    // Fallback to localStorage for in-site flow
-    if (!transactionId) {
-      const savedData = localStorage.getItem('checkoutData');
-      if (savedData) {
-        const data = JSON.parse(savedData);
-        transactionId = data.transactionId;
+      const savedData = localStorage.getItem("checkoutData");
+      if (!savedData) return;
+
+      const { transactionId, phonePeOrderId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
+
+      if (!transactionId) return;
+      hasVerified.current = true;
+      try {
+        const verifyRes = await fetch(`/api/verify-payment?transactionId=${transactionId}`);
+        const result = await verifyRes.json();
+
+        const paymentStatus = result?.data?.state || "UNKNOWN";
+
+        const basePaymentDetails: PaymentDetails = {
+          orderId: transactionId,
+          paymentMethod: "PhonePe",
+          razorpayPaymentId: transactionId,
+          address,
+          cart,
+          subtotal,
+          totalPayable,
+          mrpTotal,
+          userEmail,
+          status: paymentStatus,
+        };
+
+        let updatedPaymentDetails: PaymentDetails;
+
+        if (paymentStatus === "Order Created") {
+          updatedPaymentDetails = {
+            ...basePaymentDetails,
+            status: "Order Created",
+          };
+          await storePaymentDetails(updatedPaymentDetails);
+        } else if (paymentStatus === "FAILED") {
+          updatedPaymentDetails = { ...basePaymentDetails, status: "FAILED" };
+        } else {
+          updatedPaymentDetails = { ...basePaymentDetails, status: "PENDING" };
+        }
+
+        setPaymentDetails(updatedPaymentDetails);
+        setShowPopup(true);
+        localStorage.removeItem("checkoutData"); // ✅ Clear after showing popup
+      } catch (error) {
+        console.error("❌ Error verifying payment:", error);
+        setPaymentDetails({
+          orderId: "",
+          paymentMethod: "PhonePe",
+          address: {
+            firstName: "",
+            lastName: "",
+            phone: "",
+            email: "",
+            address: "",
+            state: "",
+            pincode: "",
+          },
+          cart: [],
+          subtotal: 0,
+          mrpTotal: 0,
+          userEmail: "",
+          status: "FAILED",
+        });
+        setShowPopup(true);
+        localStorage.removeItem("checkoutData"); // ✅ Also clear on catch
       }
-    }
-
-    if (!transactionId) return;
-
-    try {
-      const res = await fetch('/api/verify-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transactionId }),
-      });
-
-      const result = await res.json();
-      const status = result.status || result.data?.state || 'UNKNOWN';
-
-      setPaymentDetails((prev: PaymentDetails | null) => ({
-        ...prev,
-        orderId: transactionId,
-        status: status === 'SUCCESS' ? 'Order Created' : status,
-      }));
-
-      setShowPopup(true);
-      localStorage.removeItem('checkoutData'); // clean up
-    } catch (err) {
-      console.error('❌ Error verifying payment:', err);
-    }
-  };
-
-  verifyPayment();
-}, [searchParams]);
-
-
+    };
+    verifyFromLocalStorage();
+  }, []);
 
   useEffect(() => {
     if (
