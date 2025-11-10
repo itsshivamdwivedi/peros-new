@@ -95,7 +95,6 @@
 
 
 
-
 import axios from 'axios';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -116,19 +115,15 @@ export async function GET(req: NextRequest) {
   const transactionId = searchParams.get('transactionId');
 
   if (!transactionId) {
-    console.error('❌ Missing transactionId in request');
     return NextResponse.json({ error: 'Missing transactionId' }, { status: 400 });
   }
 
   if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !AUTH_URL || !PG_URL) {
-    console.error('❌ Missing required environment variables');
     return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
   }
 
-  console.log('🔍 Verifying transactionId:', transactionId);
-
   try {
-    // Step 1: Get access token from production AUTH endpoint
+    // Step 1: Access Token
     const formData = new URLSearchParams();
     formData.append('grant_type', 'client_credentials');
     formData.append('client_id', CLIENT_ID);
@@ -139,16 +134,13 @@ export async function GET(req: NextRequest) {
       `${AUTH_URL}/v1/oauth/token`,
       formData,
       {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       }
     );
 
     const { access_token } = tokenResponse.data;
-    console.log('✅ Access Token acquired successfully');
 
-    // Step 2: Get payment status from PG endpoint
+    // Step 2: Payment Status
     const statusUrl = `${PG_URL}/checkout/v2/order/${transactionId}/status`;
 
     const verifyRes = await axios.get(statusUrl, {
@@ -159,17 +151,24 @@ export async function GET(req: NextRequest) {
     });
 
     const responseData = verifyRes.data;
-    console.log('📦 PhonePe Response:', JSON.stringify(responseData, null, 2));
 
-    const paymentState = responseData?.state || 'UNKNOWN';
+    // ✅ The correct field is CODE
+    const paymentCode = responseData?.code || "UNKNOWN";
+
+    let paymentStatus = "UNKNOWN";
+
+    if (paymentCode === "PAYMENT_SUCCESS") paymentStatus = "SUCCESS";
+    else if (paymentCode === "PAYMENT_PENDING") paymentStatus = "PENDING";
+    else if (paymentCode === "PAYMENT_FAILED" || paymentCode === "PAYMENT_ERROR")
+      paymentStatus = "FAILED";
 
     return NextResponse.json({
-      status: paymentState,
+      status: paymentStatus,
+      code: paymentCode,
       data: responseData,
     });
 
   } catch (error: any) {
-    console.error('❌ Verification failed:', error?.response?.data || error?.message);
     return NextResponse.json(
       {
         error: 'Verification failed',
