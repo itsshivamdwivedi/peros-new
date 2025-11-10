@@ -100,20 +100,18 @@ interface TokenResponse {
 }
 
 export async function POST(req: NextRequest) {
-  const { transactionId } = await req.json();
-
-  if (!transactionId) {
-    return NextResponse.json({ error: "Missing transactionId" }, { status: 400 });
-  }
-
-  const { CLIENT_ID, CLIENT_SECRET, CLIENT_VERSION, ENV_URL } = process.env;
-
-  if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !ENV_URL) {
-    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
-  }
-
   try {
-    console.log("\n===========================\n STEP 1: Requesting OAuth Token\n===========================");
+    const { transactionId } = await req.json();
+
+    if (!transactionId) {
+      return NextResponse.json({ error: "Missing transactionId" }, { status: 400 });
+    }
+
+    const { CLIENT_ID, CLIENT_SECRET, CLIENT_VERSION, ENV_URL } = process.env;
+
+    if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !ENV_URL) {
+      return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
+    }
 
     // Step 1: Get OAuth token
     const tokenForm = new URLSearchParams();
@@ -122,8 +120,6 @@ export async function POST(req: NextRequest) {
     tokenForm.append("client_secret", CLIENT_SECRET);
     tokenForm.append("client_version", CLIENT_VERSION);
 
-    console.log("📤 OAuth Request Payload:", Object.fromEntries(tokenForm.entries()));
-
     const tokenRes = await axios.post<TokenResponse>(
       `${ENV_URL}/v1/oauth/token`,
       tokenForm.toString(),
@@ -131,15 +127,11 @@ export async function POST(req: NextRequest) {
     );
 
     const accessToken = tokenRes.data?.access_token;
-    console.log("✅ OAuth Response:", tokenRes.data);
-
     if (!accessToken) {
       return NextResponse.json({ error: "Failed to get access token" }, { status: 502 });
     }
 
-    console.log("\n===========================\n STEP 2: Getting Payment Status\n===========================");
-
-    // Step 2: Get Payment Status
+    // Step 2: Get payment status from PhonePe
     const statusRes = await axios.get(`${ENV_URL}/checkout/v2/order/${transactionId}/status`, {
       headers: {
         "Content-Type": "application/json",
@@ -147,21 +139,20 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    const responseData = statusRes.data;
-    console.log("✅ PhonePe Status Response:", JSON.stringify(responseData, null, 2));
+    const data = statusRes.data;
 
-    // Normalize status
+    // Step 3: Normalize status
     let paymentStatus: "SUCCESS" | "PENDING" | "FAILED" | "UNKNOWN" = "UNKNOWN";
 
-    const code = responseData?.code;
-    const state = responseData?.state;
-    const success = responseData?.success;
+    const code = data?.code;
+    const state = data?.state;
+    const success = data?.success;
 
     if (
-      code === "PAYMENT_SUCCESS" ||    // Production success
-      code === "SUCCESS" ||            // UAT success
-      state === "COMPLETED" ||         // Production success
-      state === "SUCCESS" ||           // UAT success
+      code === "PAYMENT_SUCCESS" ||
+      code === "SUCCESS" ||
+      state === "COMPLETED" ||
+      state === "SUCCESS" ||
       success === true
     ) {
       paymentStatus = "SUCCESS";
@@ -174,22 +165,22 @@ export async function POST(req: NextRequest) {
     } else if (
       code === "PAYMENT_FAILED" ||
       code === "PAYMENT_ERROR" ||
-      code === "FAILED" ||            // UAT failure
+      code === "FAILED" ||
       state === "FAILED"
     ) {
       paymentStatus = "FAILED";
     }
 
-    // Return normalized response
     return NextResponse.json({
-      success,
+      transactionId,
+      status: paymentStatus,
       code,
       state,
-      status: paymentStatus,
-      data: responseData,
+      success,
+      data, // raw PhonePe response
     });
   } catch (err: any) {
-    console.error("❌ Verification error:", err?.response?.data || err.message);
+    console.error("❌ Payment verification error:", err?.response?.data || err.message);
     return NextResponse.json(
       {
         error: "Verification failed",
