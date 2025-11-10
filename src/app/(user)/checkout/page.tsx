@@ -981,79 +981,86 @@ const Checkout = () => {
   const hasVerified = useRef(false);
 
   useEffect(() => {
-    const verifyFromLocalStorage = async () => {
-      if (hasVerified.current) return;
+  const verifyFromLocalStorage = async () => {
+    if (hasVerified.current) return;
 
-      const savedData = localStorage.getItem("checkoutData");
-      if (!savedData) return;
+    const savedData = localStorage.getItem("checkoutData");
+    if (!savedData) return;
 
-      const { transactionId, phonePeOrderId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
+    const { transactionId, phonePeOrderId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
 
-      if (!transactionId) return;
-      hasVerified.current = true;
-      try {
-        const verifyRes = await fetch(`/api/verify-payment?transactionId=${transactionId}`);
-        const result = await verifyRes.json();
+    if (!transactionId) return;
+    hasVerified.current = true;
 
-        const paymentStatus = mapPhonePeStateToPaymentStatus(result?.state, result?.errorCode);
+    try {
+      // Fetch verification from backend
+      const verifyRes = await fetch(`/api/verify-payment?transactionId=${transactionId}`);
+      const result = await verifyRes.json();
 
+      // 🔹 Debug: log entire response
+      console.log("📦 PhonePe Verification Response:", result);
+      alert(`PhonePe Verification Response:\n${JSON.stringify(result, null, 2)}`);
 
-        const basePaymentDetails: PaymentDetails = {
-          orderId: transactionId,
-          paymentMethod: "PhonePe",
-          razorpayPaymentId: transactionId,
-          address,
-          cart,
-          subtotal,
-          totalPayable,
-          mrpTotal,
-          userEmail,
-          status: paymentStatus,
-        };
+      const paymentStatus = mapPhonePeStateToPaymentStatus(result?.state, result?.errorCode);
 
-        let updatedPaymentDetails: PaymentDetails;
+      const basePaymentDetails: PaymentDetails = {
+        orderId: transactionId,
+        paymentMethod: "PhonePe",
+        razorpayPaymentId: transactionId,
+        address,
+        cart,
+        subtotal,
+        totalPayable,
+        mrpTotal,
+        userEmail,
+        status: paymentStatus,
+      };
 
-        if (paymentStatus === "COMPLETED") {
-          updatedPaymentDetails = {
-            ...basePaymentDetails,
-            status: "COMPLETED",
-          };
-          await storePaymentDetails(updatedPaymentDetails);
-        } else if (paymentStatus === "FAILED") {
-          updatedPaymentDetails = { ...basePaymentDetails, status: "FAILED" };
-        } else {
-          updatedPaymentDetails = { ...basePaymentDetails, status: "PENDING" };
-        }
+      let updatedPaymentDetails: PaymentDetails;
 
-        setPaymentDetails(updatedPaymentDetails);
-        setShowPopup(true);
-        localStorage.removeItem("checkoutData"); // ✅ Clear after showing popup
-      } catch (error) {
-        console.error("❌ Error verifying payment:", error);
-        setPaymentDetails({
-          orderId: "",
-          paymentMethod: "PhonePe",
-          address: {
-            firstName: "",
-            lastName: "",
-            phone: "",
-            email: "",
-            address: "",
-            state: "",
-            pincode: "",
-          },
-          cart: [],
-          subtotal: 0,
-          mrpTotal: 0,
-          userEmail: "",
-          status: "FAILED",
-        });
-        setShowPopup(true);
-        localStorage.removeItem("checkoutData"); // ✅ Also clear on catch
+      if (paymentStatus === "COMPLETED") {
+        updatedPaymentDetails = { ...basePaymentDetails, status: "COMPLETED" };
+        await storePaymentDetails(updatedPaymentDetails);
+      } else if (paymentStatus === "FAILED") {
+        updatedPaymentDetails = { ...basePaymentDetails, status: "FAILED" };
+      } else {
+        updatedPaymentDetails = { ...basePaymentDetails, status: "PENDING" };
       }
-    };
-    verifyFromLocalStorage();
-  }, []);
+
+      setPaymentDetails(updatedPaymentDetails);
+      setShowPopup(true);
+
+      localStorage.removeItem("checkoutData"); // Clear after showing popup
+    } catch (error) {
+      console.error("❌ Error verifying payment:", error);
+      alert(`Error verifying payment: ${error}`);
+      setPaymentDetails({
+        orderId: "",
+        paymentMethod: "PhonePe",
+        address: {
+          firstName: "",
+          lastName: "",
+          phone: "",
+          email: "",
+          address: "",
+          state: "",
+          pincode: "",
+        },
+        cart: [],
+        subtotal: 0,
+        mrpTotal: 0,
+        userEmail: "",
+        status: "FAILED",
+        totalPayable: 0,
+      });
+      setShowPopup(true);
+      localStorage.removeItem("checkoutData");
+    }
+  };
+
+  verifyFromLocalStorage();
+}, []);
+
 
   useEffect(() => {
     if (
@@ -1594,7 +1601,51 @@ await storePaymentDetails(paymentDetailsWithWaybill);
                 </Link>
               </div>
             </div>
-          )}
+          )}{paymentDetails && (
+  <div className="fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50 z-50">
+    <div className="bg-white p-6 rounded-md shadow-lg text-center relative">
+      {paymentDetails.status === "FAILED" && (
+        <>
+          <div className="text-lg font-semibold mb-2">❌ Payment Failed</div>
+          <p>Error: {paymentDetails.detailedErrorCode || paymentDetails.errorCode}</p>
+          <button
+            className="bg-green-500 hover:bg-orange-400 text-white px-4 py-2 rounded-md mt-4"
+            onClick={() => {
+              setPaymentDetails(null);
+              setShowPopup(false);
+            }}
+          >
+            Close
+          </button>
+        </>
+      )}
+
+      {paymentDetails.status === "COMPLETED" && (
+        <>
+          <div className="text-lg font-semibold mb-2">✅ Payment Completed</div>
+          <p>Order ID: {paymentDetails.orderId}</p>
+          <button
+            className="bg-green-500 hover:bg-orange-400 text-white px-4 py-2 rounded-md mt-4"
+            onClick={() => {
+              setPaymentDetails(null);
+              setShowPopup(false);
+            }}
+          >
+            Close
+          </button>
+        </>
+      )}
+
+      {paymentDetails.status === "PENDING" && (
+        <>
+          <div className="text-lg font-semibold mb-2">⏳ Payment Pending</div>
+          <p>Please wait while we verify your payment...</p>
+        </>
+      )}
+    </div>
+  </div>
+)}
+
 
           {paymentDetails?.status === "COMPLETED" && (
             <div className=" fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50">
