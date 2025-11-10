@@ -874,7 +874,7 @@ interface CartItem {
   pricel: number;
 }
 
-type PaymentStatus = "Order Created" | "FAILED" | "PENDING" | "UNKNOWN";
+type PaymentStatus = "COMPLETED" | "FAILED" | "PENDING" | "UNKNOWN";
 type PaymentDetails = {
   orderId: string;
   paymentMethod: "COD" | "PhonePe"; // specify the possible values for paymentMethod
@@ -997,10 +997,10 @@ const Checkout = () => {
 
         let updatedPaymentDetails: PaymentDetails;
 
-        if (paymentStatus === "Order Created") {
+        if (paymentStatus === "COMPLETED") {
           updatedPaymentDetails = {
             ...basePaymentDetails,
-            status: "Order Created",
+            status: "COMPLETED",
           };
           await storePaymentDetails(updatedPaymentDetails);
         } else if (paymentStatus === "FAILED") {
@@ -1296,7 +1296,7 @@ const Checkout = () => {
           totalPayable,
           mrpTotal,
           userEmail: user.email,
-          status: "Order Created",
+          status: "COMPLETED",
           extraCharges,
           totalAmount: totalPayable,
         };
@@ -1580,7 +1580,7 @@ await storePaymentDetails(paymentDetailsWithWaybill);
             </div>
           )}
 
-          {paymentDetails?.status === "Order Created" && (
+          {paymentDetails?.status === "COMPLETED" && (
             <div className=" fixed inset-0 flex items-center justify-center mt-[5vh] bg-black bg-opacity-50">
               <div className="bg-white p-6 rounded-md shadow-lg">
                 <h2 className="text-xl font-semibold mb-4 font-serif">
