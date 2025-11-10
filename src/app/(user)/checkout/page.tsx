@@ -977,10 +977,28 @@ const Checkout = () => {
       if (!transactionId) return;
       hasVerified.current = true;
       try {
-        const verifyRes = await fetch(`/api/verify-payment?transactionId=${transactionId}`);
+        const verifyRes = await fetch("/api/payment-status", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ transactionId }),
+})
+
         const result = await verifyRes.json();
 
-        const paymentStatus = result?.data?.state || "UNKNOWN";
+        const paymentCode = result?.code;
+
+let paymentStatus: PaymentStatus;
+
+if (paymentCode === "PAYMENT_SUCCESS") {
+  paymentStatus = "Order Created"; // ✅ SUCCESS
+} else if (paymentCode === "PAYMENT_PENDING") {
+  paymentStatus = "PENDING";
+} else if (paymentCode === "PAYMENT_ERROR" || paymentCode === "PAYMENT_FAILED") {
+  paymentStatus = "FAILED";
+} else {
+  paymentStatus = "UNKNOWN";
+}
+
 
         const basePaymentDetails: PaymentDetails = {
           orderId: transactionId,
