@@ -92,6 +92,7 @@
 //     );
 //   }
 // }
+
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -104,12 +105,14 @@ export async function POST(req: NextRequest) {
     const { transactionId } = await req.json();
 
     if (!transactionId) {
+      console.error("❌ Missing transactionId in request body");
       return NextResponse.json({ error: "Missing transactionId" }, { status: 400 });
     }
 
     const { CLIENT_ID, CLIENT_SECRET, CLIENT_VERSION, ENV_URL } = process.env;
 
     if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !ENV_URL) {
+      console.error("❌ Server misconfiguration: missing env variables");
       return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
     }
 
@@ -120,6 +123,7 @@ export async function POST(req: NextRequest) {
     tokenForm.append("client_secret", CLIENT_SECRET);
     tokenForm.append("client_version", CLIENT_VERSION);
 
+    console.log("📤 Requesting OAuth token from PhonePe...");
     const tokenRes = await axios.post<TokenResponse>(
       `${ENV_URL}/v1/oauth/token`,
       tokenForm.toString(),
@@ -127,11 +131,15 @@ export async function POST(req: NextRequest) {
     );
 
     const accessToken = tokenRes.data?.access_token;
+    console.log("🔐 Access Token:", accessToken);
+
     if (!accessToken) {
+      console.error("❌ Failed to get access token", tokenRes.data);
       return NextResponse.json({ error: "Failed to get access token" }, { status: 502 });
     }
 
     // Step 2: Get payment status from PhonePe
+    console.log(`📦 Fetching payment status for transactionId=${transactionId}...`);
     const statusRes = await axios.get(`${ENV_URL}/checkout/v2/order/${transactionId}/status`, {
       headers: {
         "Content-Type": "application/json",
@@ -140,13 +148,16 @@ export async function POST(req: NextRequest) {
     });
 
     const data = statusRes.data;
-
-    // Step 3: Normalize status
-    let paymentStatus: "SUCCESS" | "PENDING" | "FAILED" | "UNKNOWN" = "UNKNOWN";
+    console.log("📦 Raw PhonePe status response:", JSON.stringify(data, null, 2));
 
     const code = data?.code;
     const state = data?.state;
     const success = data?.success;
+
+    console.log("🔹 Code:", code, "State:", state, "Success:", success);
+
+    // Step 3: Normalize status
+    let paymentStatus: "Order Created" | "PENDING" | "FAILED" | "UNKNOWN" = "UNKNOWN";
 
     if (
       code === "PAYMENT_SUCCESS" ||
@@ -155,7 +166,7 @@ export async function POST(req: NextRequest) {
       state === "SUCCESS" ||
       success === true
     ) {
-      paymentStatus = "SUCCESS";
+      paymentStatus = "Order Created";
     } else if (
       code === "PAYMENT_PENDING" ||
       code === "PENDING" ||
@@ -171,13 +182,15 @@ export async function POST(req: NextRequest) {
       paymentStatus = "FAILED";
     }
 
+    console.log("💻 Mapped Payment Status:", paymentStatus);
+
     return NextResponse.json({
       transactionId,
       status: paymentStatus,
       code,
       state,
       success,
-      data, // raw PhonePe response
+      data, // raw PhonePe response for debugging
     });
   } catch (err: any) {
     console.error("❌ Payment verification error:", err?.response?.data || err.message);
