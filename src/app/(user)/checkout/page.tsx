@@ -966,78 +966,50 @@ const Checkout = () => {
   const hasVerified = useRef(false);
 
   useEffect(() => {
-    const verifyFromLocalStorage = async () => {
-      if (hasVerified.current) return;
+  const verifyFromLocalStorage = async () => {
+    const savedData = localStorage.getItem("checkoutData");
+    if (!savedData) return;
 
-      const savedData = localStorage.getItem("checkoutData");
-      if (!savedData) return;
+    const { transactionId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
 
-      const { transactionId, phonePeOrderId, address, cart, subtotal, mrpTotal, userEmail } = JSON.parse(savedData);
+    let attempts = 0;
+    const maxAttempts = 20; // stop after 20 tries (~10 minutes)
 
-      if (!transactionId) return;
-      hasVerified.current = true;
+    const interval = setInterval(async () => {
+      attempts++;
       try {
         const verifyRes = await fetch(`/api/verify-payment?transactionId=${transactionId}`);
         const result = await verifyRes.json();
-
         const paymentStatus = result?.data?.state || "UNKNOWN";
 
-        const basePaymentDetails: PaymentDetails = {
-          orderId: transactionId,
-          paymentMethod: "PhonePe",
-          razorpayPaymentId: transactionId,
-          address,
-          cart,
-          subtotal,
-          totalPayable,
-          mrpTotal,
-          userEmail,
-          status: paymentStatus,
-        };
-
-        let updatedPaymentDetails: PaymentDetails;
-
-        if (paymentStatus === "COMPLETED") {
-          updatedPaymentDetails = {
-            ...basePaymentDetails,
-            status: "COMPLETED",
+        if (paymentStatus === "COMPLETED" || paymentStatus === "FAILED") {
+          const updatedPaymentDetails: PaymentDetails = {
+            orderId: transactionId,
+            paymentMethod: "PhonePe",
+            razorpayPaymentId: transactionId,
+            address,
+            cart,
+            subtotal,
+            totalPayable: subtotal, 
+            mrpTotal,
+            userEmail,
+            status: paymentStatus,
           };
-          await storePaymentDetails(updatedPaymentDetails);
-        } else if (paymentStatus === "FAILED") {
-          updatedPaymentDetails = { ...basePaymentDetails, status: "FAILED" };
-        } else {
-          updatedPaymentDetails = { ...basePaymentDetails, status: "PENDING" };
+          setPaymentDetails(updatedPaymentDetails);
+          setShowPopup(true);
+          localStorage.removeItem("checkoutData");
+          clearInterval(interval);
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval);
         }
-
-        setPaymentDetails(updatedPaymentDetails);
-        setShowPopup(true);
-        localStorage.removeItem("checkoutData"); // ✅ Clear after showing popup
       } catch (error) {
         console.error("❌ Error verifying payment:", error);
-        setPaymentDetails({
-          orderId: "",
-          paymentMethod: "PhonePe",
-          address: {
-            firstName: "",
-            lastName: "",
-            phone: "",
-            email: "",
-            address: "",
-            state: "",
-            pincode: "",
-          },
-          cart: [],
-          subtotal: 0,
-          mrpTotal: 0,
-          userEmail: "",
-          status: "FAILED",
-        });
-        setShowPopup(true);
-        localStorage.removeItem("checkoutData"); // ✅ Also clear on catch
       }
-    };
-    verifyFromLocalStorage();
-  }, []);
+    }, 30000); // poll every 30 seconds
+  };
+
+  verifyFromLocalStorage();
+}, []);
 
   useEffect(() => {
     if (
