@@ -93,7 +93,6 @@
 //   }
 // }
 
-
 import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -108,93 +107,64 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing transactionId" }, { status: 400 });
   }
 
-  const {
-    CLIENT_ID,
-    CLIENT_SECRET,
-    CLIENT_VERSION,
-    AUTH_URL,
-    PG_URL,
-  } = process.env;
+  const { CLIENT_ID, CLIENT_SECRET, CLIENT_VERSION, ENV_URL } = process.env;
 
-  if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !AUTH_URL || !PG_URL) {
-    return NextResponse.json(
-      { error: "Server misconfiguration" },
-      { status: 500 }
-    );
+  if (!CLIENT_ID || !CLIENT_SECRET || !CLIENT_VERSION || !ENV_URL) {
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 500 });
   }
 
   try {
-    // ✅ Step 1 — Get Token
-    const formData = new URLSearchParams();
-    formData.append("grant_type", "client_credentials");
-    formData.append("client_id", CLIENT_ID);
-    formData.append("client_secret", CLIENT_SECRET);
-    formData.append("client_version", CLIENT_VERSION);
+    console.log("===========================\n STEP 1: Requesting OAuth Token\n===========================");
 
-    const tokenResponse = await axios.post<TokenResponse>(
-      `${AUTH_URL}/v1/oauth/token`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
+    const tokenForm = new URLSearchParams();
+    tokenForm.append("grant_type", "client_credentials");
+    tokenForm.append("client_id", CLIENT_ID);
+    tokenForm.append("client_secret", CLIENT_SECRET);
+    tokenForm.append("client_version", CLIENT_VERSION);
+
+    console.log("📤 OAuth Request Payload:", Object.fromEntries(tokenForm.entries()));
+
+    const tokenRes = await axios.post<TokenResponse>(
+      `${ENV_URL}/v1/oauth/token`,
+      tokenForm.toString(),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
-    const { access_token } = tokenResponse.data;
+    const accessToken = tokenRes.data?.access_token;
+    console.log("✅ OAuth Response:", tokenRes.data);
 
-    // ✅ Step 2 — Get Payment Status
-    const statusRes = await axios.get(
-      `${PG_URL}/checkout/v2/order/${transactionId}/status`,
-      {
-        headers: {
-          Authorization: `O-Bearer ${access_token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    if (!accessToken) {
+      return NextResponse.json({ error: "Failed to get access token" }, { status: 502 });
+    }
+
+    console.log("===========================\n STEP 2: Getting Payment Status\n===========================");
+
+    const statusRes = await axios.get(`${ENV_URL}/checkout/v2/order/${transactionId}/status`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `O-Bearer ${accessToken}`,
+      },
+    });
 
     const responseData = statusRes.data;
+    console.log("✅ PhonePe Status Response:", JSON.stringify(responseData, null, 2));
 
-    console.log(
-      "✅ PhonePe Status Response:",
-      JSON.stringify(responseData, null, 2)
-    );
-
-    const paymentCode = responseData?.code;
+    // Normalize status
+    let paymentStatus = "UNKNOWN";
+    const code = responseData?.code;
     const state = responseData?.state;
     const success = responseData?.success;
 
-    // ✅ Normalize everything
-    let paymentStatus = "UNKNOWN";
+    if (code === "PAYMENT_SUCCESS" || state === "COMPLETED" || success === true) paymentStatus = "SUCCESS";
+    else if (code === "PAYMENT_PENDING" || state === "PENDING") paymentStatus = "PENDING";
+    else if (code === "PAYMENT_FAILED" || code === "PAYMENT_ERROR" || state === "FAILED") paymentStatus = "FAILED";
 
-    if (paymentCode === "PAYMENT_SUCCESS" || state === "COMPLETED" || success === true) {
-      paymentStatus = "SUCCESS";
-    } else if (paymentCode === "PAYMENT_PENDING" || state === "PENDING") {
-      paymentStatus = "PENDING";
-    } else if (
-      paymentCode === "PAYMENT_FAILED" ||
-      paymentCode === "PAYMENT_ERROR" ||
-      state === "FAILED"
-    ) {
-      paymentStatus = "FAILED";
-    }
+    return NextResponse.json({ success, code, state, status: paymentStatus, data: responseData });
 
-    return NextResponse.json({
-      success,
-      code: paymentCode,
-      state,
-      status: paymentStatus,
-      data: responseData,
-    });
-  } catch (error: any) {
-    console.error("❌ Verification error:", error?.response?.data || error.message);
-
+  } catch (err: any) {
+    console.error("❌ Verification error:", err?.response?.data || err.message);
     return NextResponse.json(
-      {
-        error: "Verification failed",
-        details: error?.response?.data || error?.message,
-      },
+      { error: "Verification failed", details: err?.response?.data || err?.message },
       { status: 500 }
     );
   }
