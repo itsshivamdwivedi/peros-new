@@ -965,7 +965,7 @@ const Checkout = () => {
 
   const hasVerified = useRef(false);
 
- useEffect(() => {
+useEffect(() => {
   const interval = setInterval(async () => {
     const savedData = localStorage.getItem("checkoutData");
     if (!savedData) return;
@@ -1018,6 +1018,7 @@ const Checkout = () => {
 
   return () => clearInterval(interval);
 }, []);
+
 
   useEffect(() => {
     if (

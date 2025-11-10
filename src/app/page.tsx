@@ -38,6 +38,7 @@ export default function Home() {
       {!isLoading && (
         <div>
           <Navbar />
+          {/* <ProductPopulate /> */}
          
       
       <Content/>
