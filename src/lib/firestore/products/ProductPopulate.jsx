@@ -56,7 +56,7 @@ const peanutButterVariants = [
       "We make our protein-packed peanut butters in fresh batches daily to lock in maximum taste and nutrition.",
     shelfLife: "12 Months",
     sizes: [
-      { label: "500g", price: 1, pricel: 330, inStock: true },
+      { label: "500g", price: 299, pricel: 330, inStock: true },
       { label: "1kg", price: 525, pricel: 600, inStock: true },
     ],
   }
